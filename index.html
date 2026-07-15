@@ -1,0 +1,3066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSPIV — Gestión Integral</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --sidebar-bg: #16181f;
+    --sidebar-border: #23262f;
+    --surface: #1c1e27;
+    --surface2: #22252f;
+    --surface3: #282b36;
+    --border: #2a2d38;
+    --border2: #353848;
+    --accent: #4f7cff;
+    --accent-hover: #6b91ff;
+    --accent-soft: rgba(79,124,255,0.12);
+    --accent2: #38d9a9;
+    --danger: #ff5c72;
+    --danger-soft: rgba(255,92,114,0.12);
+    --warning: #ffc542;
+    --text: #e8eaf0;
+    --text2: #9ea3b5;
+    --text3: #5f6478;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.35);
+    --sidebar-w: 230px;
+    --transition: 0.18s ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+  /* LOGIN */
+  #loginScreen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  #loginScreen.hidden { display: none; }
+  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 380px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 28px; }
+  .login-logo { display: flex; flex-direction: column; gap: 6px; }
+  .login-logo .brand { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .login-logo .brand span { color: var(--accent); }
+  .login-logo .sub { font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+  .login-field { display: flex; flex-direction: column; gap: 8px; }
+  .login-field label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .login-input-wrap { position: relative; }
+  .login-input-wrap input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 40px 11px 14px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: border-color var(--transition); }
+  .login-input-wrap input:focus { border-color: var(--accent); }
+  .toggle-pass { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text3); cursor: pointer; padding: 2px; display: flex; align-items: center; }
+  .toggle-pass:hover { color: var(--text2); }
+  .login-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: 12px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .login-btn:hover { background: var(--accent-hover); }
+  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .login-error { background: var(--danger-soft); border: 1px solid var(--danger); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--danger); font-size: 13px; display: none; }
+  .login-error.show { display: block; }
+
+  /* SHELL */
+  #appShell { display: flex; min-height: 100vh; }
+  #appShell.hidden { display: none; }
+
+  /* SIDEBAR */
+  .sidebar { width: var(--sidebar-w); background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+  .sidebar-header { padding: 22px 20px 18px; border-bottom: 1px solid var(--sidebar-border); }
+  .sidebar-brand { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+  .sidebar-brand span { color: var(--accent); }
+  .sidebar-sub { font-size: 10px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+  .sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  .nav-section-label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 10px 10px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13.5px; font-weight: 500; transition: background var(--transition), color var(--transition); border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent); }
+  .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+  .nav-item.active svg { opacity: 1; }
+  .nav-item.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  .nav-badge { margin-left: auto; font-size: 10px; font-weight: 600; background: var(--surface3); color: var(--text3); padding: 1px 6px; border-radius: 20px; }
+  .sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--sidebar-border); }
+  .logout-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text3); font-size: 13px; font-weight: 500; transition: background var(--transition), color var(--transition); border: none; background: none; width: 100%; }
+  .logout-btn:hover { background: var(--danger-soft); color: var(--danger); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--sidebar-bg); border-bottom: 1px solid var(--sidebar-border); padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-badge { font-size: 11px; color: var(--text3); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-weight: 500; }
+  #syncIcon.spinning { animation: spin 0.7s linear infinite; }
+  .content { padding: 28px; flex: 1; }
+
+  /* PÁGINAS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* DASHBOARD */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; }
+  .stat-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text2); }
+  .stat-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+  .stat-icon.blue { background: rgba(79,124,255,0.15); color: var(--accent); }
+  .stat-icon.green { background: rgba(56,217,169,0.15); color: var(--accent2); }
+  .stat-icon.orange { background: rgba(255,197,66,0.15); color: var(--warning); }
+  .stat-icon.red { background: rgba(255,92,114,0.15); color: var(--danger); }
+  .welcome-card { background: linear-gradient(135deg, rgba(79,124,255,0.12) 0%, rgba(56,217,169,0.06) 100%); border: 1px solid rgba(79,124,255,0.2); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 24px; }
+  .welcome-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .welcome-card p { color: var(--text2); font-size: 13.5px; }
+
+  /* CRUD */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+  .section-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: background var(--transition), opacity var(--transition); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--surface3); color: var(--text); }
+  .btn-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: rgba(255,92,114,0.2); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 220px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 14px; color: var(--text); font-family: inherit; font-size: 13.5px; outline: none; transition: border-color var(--transition); }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+  .filter-select { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 14px; color: var(--text); font-family: inherit; font-size: 13.5px; outline: none; cursor: pointer; }
+  .filter-select:focus { border-color: var(--accent); }
+
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  thead th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 12px 16px; font-size: 13.5px; color: var(--text); vertical-align: middle; }
+  .td-sub { font-size: 12px; color: var(--text2); }
+  .table-empty { padding: 48px 24px; text-align: center; color: var(--text3); font-size: 13px; }
+  .table-empty svg { margin: 0 auto 12px; display: block; opacity: 0.3; }
+  .actions-cell { display: flex; gap: 6px; }
+  .icon-btn { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: background var(--transition); flex-shrink: 0; }
+  .icon-btn.edit { background: var(--surface3); color: var(--accent); }
+  .icon-btn.edit:hover { background: var(--accent-soft); }
+  .icon-btn.del { background: var(--surface3); color: var(--danger); }
+  .icon-btn.del:hover { background: var(--danger-soft); }
+  .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-blue { background: var(--accent-soft); color: var(--accent); }
+  .badge-green { background: rgba(56,217,169,0.12); color: var(--accent2); }
+  .badge-orange { background: rgba(255,197,66,0.12); color: var(--warning); }
+  .badge-red { background: rgba(255,92,114,0.12); color: var(--danger); }
+  .badge-gray { background: var(--surface3); color: var(--text2); }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 100%; max-width: 620px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); transform: translateY(12px); transition: transform 0.2s ease; max-height: 90vh; display: flex; flex-direction: column; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-lg { max-width: 780px; }
+  .modal-header { padding: 22px 24px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { width: 30px; height: 30px; border-radius: 6px; background: var(--surface2); border: none; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--transition); }
+  .modal-close:hover { background: var(--surface3); color: var(--text); }
+  .modal-body { padding: 22px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
+
+  /* FORMS */
+  .form-grid { display: grid; gap: 16px; }
+  .form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.span-2 { grid-column: 1 / -1; }
+  .form-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .form-label span { color: var(--danger); margin-left: 2px; }
+  .form-input, .form-select, .form-textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); font-family: inherit; font-size: 13.5px; outline: none; transition: border-color var(--transition); width: 100%; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+  .form-select option { background: var(--surface2); }
+  .form-textarea { resize: vertical; min-height: 76px; }
+
+  /* AUTOCOMPLETE */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); z-index: 200; max-height: 200px; overflow-y: auto; box-shadow: var(--shadow); display: none; }
+  .autocomplete-list.show { display: block; }
+  .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 13.5px; border-bottom: 1px solid var(--border); transition: background var(--transition); }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover, .autocomplete-item.selected { background: var(--accent-soft); color: var(--accent); }
+  .autocomplete-item .sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* SECCIÓN DENTRO DE MODAL */
+  .modal-section { margin-bottom: 24px; }
+  .modal-section-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .modal-section:last-child { margin-bottom: 0; }
+
+  /* LISTA ACUMULATIVA (prórrogas / estudios) */
+  .list-acum { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .list-acum-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .list-acum-item .item-info { flex: 1; min-width: 0; font-size: 13px; }
+  .list-acum-item .item-info strong { display: block; }
+  .list-acum-item .item-info span { font-size: 12px; color: var(--text2); }
+  .list-acum-empty { font-size: 13px; color: var(--text3); padding: 10px 0; }
+  .add-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .add-row .form-field { flex: 1; min-width: 120px; }
+  .add-row .btn { flex-shrink: 0; align-self: flex-end; }
+
+  /* AFILIADO CARD en modal internación */
+  .afil-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; gap: 16px; align-items: center; margin-top: 8px; }
+  .afil-card-data { flex: 1; }
+  .afil-card-data .nombre { font-weight: 600; font-size: 14px; }
+  .afil-card-data .detalle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  #afilCardWrap { display: none; }
+  #afilCardWrap.show { display: block; }
+
+  /* TOAST */
+  #toastContainer { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; box-shadow: var(--shadow); font-size: 13.5px; min-width: 260px; animation: slideIn 0.25s ease; }
+  .toast.success { border-left: 3px solid var(--accent2); }
+  .toast.error { border-left: 3px solid var(--danger); }
+  .toast.info { border-left: 3px solid var(--accent); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* LOADING */
+  .loading-row td { padding: 32px !important; text-align: center; color: var(--text3); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* CONFIG SECTIONS */
+  .cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; }
+  @media (max-width: 800px) { .cfg-grid { grid-template-columns: 1fr; } }
+  .cfg-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
+  .cfg-card-title { font-size: 13px; font-weight: 700; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 2px; }
+  .cfg-card-sub { font-size: 11px; color: var(--text3); margin-top: -6px; }
+  .cfg-list { display: flex; flex-direction: column; gap: 6px; min-height: 32px; max-height: 220px; overflow-y: auto; }
+  .cfg-list-item { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; gap: 8px; }
+  .cfg-list-item span { flex: 1; }
+  .cfg-add-row { display: flex; gap: 8px; }
+  .cfg-add-row input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); }
+  .cfg-add-row input:focus { border-color: var(--accent); }
+  .cfg-add-row input::placeholder { color: var(--text3); }
+  .cfg-inline { display: flex; align-items: center; gap: 10px; }
+  .cfg-inline input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text); font-family: inherit; font-size: 13.5px; outline: none; transition: border-color var(--transition); }
+  .cfg-inline input:focus { border-color: var(--accent); }
+  .cfg-url-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 0; }
+
+  /* DASHBOARD KPIs */
+  .dash-section-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.9px; margin: 24px 0 10px; }
+  .kpi-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .kpi-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .kpi-chip strong { font-size: 18px; font-weight: 700; }
+  .kpi-chip .kpi-label { color: var(--text2); font-size: 12px; }
+  .alerta-planilla { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; margin-top:8px; }
+  .alerta-planilla.ok { background:rgba(56,217,169,0.1); border:1px solid var(--accent2); color:var(--accent2); }
+  .alerta-planilla.warn { background:rgba(255,197,66,0.1); border:1px solid var(--warning); color:var(--warning); }
+  .alerta-planilla.venc { background:var(--danger-soft); border:1px solid var(--danger); color:var(--danger); }
+
+  /* NOMBRE CLICKEABLE → FICHA */
+  .link-nombre { cursor: pointer; border-bottom: 1px dashed transparent; transition: border-color var(--transition), color var(--transition); }
+  .link-nombre:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* FICHA TÉCNICA */
+  .ficha-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .ficha-avatar { width: 52px; height: 52px; border-radius: 12px; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+  .ficha-header-data .nombre { font-size: 18px; font-weight: 700; }
+  .ficha-header-data .sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .ficha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-bottom: 20px; }
+  .ficha-item { display: flex; flex-direction: column; gap: 3px; }
+  .ficha-item.span-2 { grid-column: 1 / -1; }
+  .ficha-item .lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ficha-item .val { font-size: 14px; color: var(--text); }
+  .ficha-block { margin-bottom: 18px; }
+  .ficha-block-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .ficha-list { display: flex; flex-direction: column; gap: 6px; }
+  .ficha-list-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 13px; font-size: 13px; }
+  .ficha-cat-group { margin-bottom: 12px; }
+  .ficha-cat-group-title { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .ficha-empty { font-size: 13px; color: var(--text3); padding: 4px 0; }
+
+  /* COTIZACIÓN PROVEEDORES */
+  .cotiz-grid { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+  .cotiz-item { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .cotiz-item label { display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; flex:1; min-width:120px; }
+  .cotiz-item input[type=checkbox] { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; }
+  .cotiz-monto { background:var(--surface3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:7px 10px; color:var(--text); font-family:inherit; font-size:13px; outline:none; width:130px; transition:border-color var(--transition); }
+  .cotiz-monto:focus { border-color:var(--accent); }
+  .cotiz-monto::placeholder { color:var(--text3); }
+  .cotiz-empty { font-size:13px; color:var(--text3); padding:6px 0; }
+
+  /* AFIL CARD genérica (para dom e insumos) */
+  .afil-card-wrap-generic { display:none; }
+  .afil-card-wrap-generic.show { display:block; }
+
+  @media (max-width: 700px) {
+    .form-grid.cols-2, .form-grid.cols-3 { grid-template-columns: 1fr; }
+    .form-field.span-2 { grid-column: 1; }
+    .content { padding: 16px; }
+    .topbar { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="brand">OSPIV <span>·</span> Gestión Integral</div>
+      <div class="sub">Obra Social del Personal de la Industria del Vidrio</div>
+    </div>
+    <div id="loginError" class="login-error">Contraseña incorrecta. Intentá de nuevo.</div>
+    <div class="login-field">
+      <label>Contraseña de acceso</label>
+      <div class="login-input-wrap">
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+        <button class="toggle-pass" onclick="togglePass()" tabindex="-1" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Ingresar
+    </button>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell" class="hidden">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">OSPIV <span>·</span> GI</div>
+      <div class="sidebar-sub">Gestión Integral</div>
+    </div>
+    <div class="sidebar-nav">
+      <span class="nav-section-label">Principal</span>
+      <button class="nav-item active" onclick="navigate('dashboard', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="navigate('afiliados', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Afiliados
+      </button>
+      <button class="nav-item" onclick="navigate('proveedores', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        Proveedores
+      </button>
+      <button class="nav-item" onclick="navigate('internaciones', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Internaciones
+      </button>
+      <button class="nav-item" onclick="navigate('internaciondom', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Int. Domiciliaria
+      </button>
+      <button class="nav-item" onclick="navigate('insumosambulatorios', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10H3"/><path d="M21 6H3"/><path d="M21 14H3"/><path d="M21 18H3"/></svg>
+        Insumos Ambul.
+      </button>
+      <button class="nav-item" onclick="navigate('reintegros', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Reintegros
+      </button>
+      <button class="nav-item" onclick="navigate('configuracion', this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configuración
+      </button>
+      <span class="nav-section-label" style="margin-top:8px">Próximas fases</span>
+      <button class="nav-item disabled">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Facturas
+        <span class="nav-badge">F3</span>
+      </button>
+      <button class="nav-item disabled">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Prestaciones
+        <span class="nav-badge">F4</span>
+      </button>
+      <button class="nav-item disabled">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Reportes
+        <span class="nav-badge">F5</span>
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" id="btnSync" onclick="sincronizarTodo()" style="padding:7px 14px">
+          <svg id="syncIcon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Sincronizar
+        </button>
+        <div class="topbar-badge" id="topbarDate"></div>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active">
+        <div class="welcome-card">
+          <h2>Bienvenida al sistema 👋</h2>
+          <p>OSPIV — Gestión Integral. Sistema completo activo.</p>
+        </div>
+
+        <div class="dash-section-title">Internaciones hospitalarias</div>
+        <div class="stats-grid" style="margin-bottom:0">
+          <div class="stat-card">
+            <div class="stat-icon red"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="stat-label">Internados activos</div>
+            <div class="stat-value" id="statInternados">—</div>
+            <div class="stat-sub">estado: Internado</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stat-label">Con alta</div>
+            <div class="stat-value" id="statInternacionesAlta">—</div>
+            <div class="stat-sub">estado: Alta</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="stat-label">Falta O.V.I.T.O.</div>
+            <div class="stat-value" id="statOvito">—</div>
+            <div class="stat-sub">pendientes</div>
+          </div>
+        </div>
+
+        <div class="dash-section-title">Internación domiciliaria</div>
+        <div class="stats-grid" style="margin-bottom:0">
+          <div class="stat-card">
+            <div class="stat-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="stat-label">Dom. activas</div>
+            <div class="stat-value" id="statIntDomActivas">—</div>
+            <div class="stat-sub">estado: Activo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="stat-label">Planillas por vencer</div>
+            <div class="stat-value" id="statPlanillasVencer">—</div>
+            <div class="stat-sub">próximos 30 días</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div class="stat-label">Planillas vencidas</div>
+            <div class="stat-value" id="statPlanillasVencidas">—</div>
+            <div class="stat-sub">requieren renovación</div>
+          </div>
+        </div>
+
+        <div class="dash-section-title">Insumos ambulatorios</div>
+        <div class="stats-grid" style="margin-bottom:0">
+          <div class="stat-card">
+            <div class="stat-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10H3"/><path d="M21 6H3"/><path d="M21 14H3"/><path d="M21 18H3"/></svg></div>
+            <div class="stat-label">Insumos del mes</div>
+            <div class="stat-value" id="statInsumosMes">—</div>
+            <div class="stat-sub" id="statInsumosMesSub">mes actual</div>
+          </div>
+        </div>
+
+        <div class="dash-section-title">Reintegros</div>
+        <div class="stats-grid" style="margin-bottom:0">
+          <div class="stat-card">
+            <div class="stat-icon orange"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-label">Pendientes del mes</div>
+            <div class="stat-value" id="statReiPendientes">—</div>
+            <div class="stat-sub">estado: Pendiente</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stat-label">Aprobados del mes</div>
+            <div class="stat-value" id="statReiAprobados">—</div>
+            <div class="stat-sub">estado: Aprobado</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="stat-label">Pagados del mes</div>
+            <div class="stat-value" id="statReiPagados">—</div>
+            <div class="stat-sub">estado: Pagado</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="stat-label">Monto aprobado mes</div>
+            <div class="stat-value" id="statReiMontoMes" style="font-size:18px">—</div>
+            <div class="stat-sub">total aprobado</div>
+          </div>
+        </div>
+
+        <div class="dash-section-title">Detalle operativo</div>
+        <div class="cfg-grid" style="max-width:none">
+          <div class="cfg-card">
+            <div class="cfg-card-title">⏰ Planillas domiciliarias — próximas a vencer y vencidas</div>
+            <div class="cfg-list" id="dashPlanillasList" style="max-height:260px; overflow-y:auto"></div>
+          </div>
+          <div class="cfg-card">
+            <div class="cfg-card-title">🏆 Ranking de cirugías más solicitadas</div>
+            <div class="cfg-list" id="dashCirugiasList" style="max-height:260px; overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AFILIADOS -->
+      <div id="page-afiliados" class="page">
+        <div class="section-header">
+          <div class="section-title">Afiliados</div>
+          <button class="btn btn-primary" onclick="openAfiliadoModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo afiliado
+          </button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="searchAfiliados" placeholder="Buscar por nombre o DNI…" oninput="filterAfiliados()">
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Nombre completo</th><th>DNI</th><th>Seccional</th><th>Teléfono</th><th>Tipo servicio</th><th></th></tr></thead>
+              <tbody id="bodyAfiliados"><tr class="loading-row"><td colspan="6"><span class="spinner"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROVEEDORES -->
+      <div id="page-proveedores" class="page">
+        <div class="section-header">
+          <div class="section-title">Proveedores</div>
+          <button class="btn btn-primary" onclick="openProveedorModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo proveedor
+          </button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="searchProveedores" placeholder="Buscar por nombre o tipo…" oninput="filterProveedores()">
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Empresa</th><th>Contacto</th><th>Teléfono / Mail</th><th>Rubro</th><th>Tipo</th><th>Cond. pago</th><th>Cal.</th><th></th></tr></thead>
+              <tbody id="bodyProveedores"><tr class="loading-row"><td colspan="8"><span class="spinner"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERNACIONES -->
+      <div id="page-internaciones" class="page">
+        <div class="section-header">
+          <div class="section-title">Internaciones</div>
+          <button class="btn btn-primary" onclick="openInternacionModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva internación
+          </button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="searchInternaciones" placeholder="Buscar por nombre o DNI…" oninput="filterInternaciones()">
+          <select class="filter-select" id="filterEstadoInternacion" onchange="filterInternaciones()">
+            <option value="">Todos los estados</option>
+            <option>Internado</option>
+            <option>Alta</option>
+            <option>Falta O.V.I.T.O.</option>
+            <option>Suspendido</option>
+            <option>Fallecido</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Afiliado</th>
+                  <th>DNI</th>
+                  <th>Clínica</th>
+                  <th>Ingreso</th>
+                  <th>Alta</th>
+                  <th>Estado</th>
+                  <th>Prórrogas</th>
+                  <th>Estudios</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="bodyInternaciones"><tr class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERNACIÓN DOMICILIARIA -->
+      <div id="page-internaciondom" class="page">
+        <div class="section-header">
+          <div class="section-title">Internación Domiciliaria</div>
+          <button class="btn btn-primary" onclick="openIntDomModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva
+          </button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="searchIntDom" placeholder="Buscar por nombre o DNI…" oninput="filterIntDom()">
+          <select class="filter-select" id="filterIntDomEstado" onchange="filterIntDom()">
+            <option value="">Todos los estados</option>
+            <option>Activo</option><option>Alta</option><option>Suspendido</option><option>Fallecido</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Afiliado</th><th>DNI</th><th>Prestaciones</th><th>Estado</th><th>Planilla</th><th>Alerta</th><th></th></tr></thead>
+              <tbody id="bodyIntDom"><tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSUMOS AMBULATORIOS -->
+      <div id="page-insumosambulatorios" class="page">
+        <div class="section-header">
+          <div class="section-title">Insumos Ambulatorios</div>
+          <button class="btn btn-primary" onclick="openInsumoModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo
+          </button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="searchInsumos" placeholder="Buscar por nombre o DNI…" oninput="filterInsumos()">
+          <select class="filter-select" id="filterInsumoTipo" onchange="filterInsumos()">
+            <option value="">Todos los insumos</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Afiliado</th><th>DNI</th><th>Insumo</th><th>Cotizaciones</th><th>Proveedor elegido</th><th>Monto</th><th></th></tr></thead>
+              <tbody id="bodyInsumos"><tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REINTEGROS -->
+      <div id="page-reintegros" class="page">
+        <div class="section-header">
+          <div class="section-title">Reintegros</div>
+          <button class="btn btn-primary" onclick="openReintegroModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo reintegro
+          </button>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="searchReintegros" placeholder="Buscar por nombre o DNI…" oninput="filterReintegros()">
+          <select class="filter-select" id="filterReintegroEstado" onchange="filterReintegros()">
+            <option value="">Todos los estados</option>
+            <option>Pendiente</option><option>Aprobado</option><option>Rechazado</option><option>Pagado</option>
+          </select>
+          <select class="filter-select" id="filterReintegroMotivo" onchange="filterReintegros()">
+            <option value="">Todos los motivos</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Afiliado</th><th>DNI</th><th>Motivo</th><th>Monto solicitado</th><th>Monto aprobado</th><th>Estado</th><th></th></tr></thead>
+              <tbody id="bodyReintegros"><tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURACIÓN -->
+      <div id="page-configuracion" class="page">
+        <div class="section-header">
+          <div class="section-title">Configuración</div>
+          <button class="btn btn-primary" id="btnSaveConfig" onclick="saveAllConfig()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar configuración
+          </button>
+        </div>
+        <div id="cfg_saveStatus" style="display:none; margin-bottom:16px; padding:10px 16px; border-radius:var(--radius-sm); font-size:13px;"></div>
+
+        <div class="cfg-grid">
+
+          <!-- URL GAS -->
+          <div class="cfg-card" style="grid-column: 1 / -1;">
+            <div class="cfg-card-title">🔗 URL del Apps Script (GAS)</div>
+            <div class="cfg-card-sub">Pegá la URL cada vez que hagas una nueva implementación</div>
+            <div class="cfg-inline">
+              <input id="cfg_gasUrl" placeholder="https://script.google.com/macros/s/…/exec" style="font-family:monospace; font-size:12px;">
+              <button class="btn btn-primary" onclick="saveGasUrl()" style="flex-shrink:0">Guardar URL</button>
+              <button class="btn btn-ghost" onclick="testGasUrl()" style="flex-shrink:0">Probar</button>
+            </div>
+            <div id="cfg_status" style="display:none; padding:8px 12px; border-radius:var(--radius-sm); font-size:13px;"></div>
+          </div>
+
+          <!-- CONTRASEÑA -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">🔑 Contraseña del sistema</div>
+            <div class="cfg-card-sub">Cambia la contraseña de acceso al sistema</div>
+            <div class="cfg-inline">
+              <input type="password" id="cfg_pass" placeholder="Nueva contraseña…">
+              <button class="btn btn-ghost" onclick="toggleCfgPass()" style="flex-shrink:0">Ver</button>
+            </div>
+          </div>
+
+          <!-- TOPE CELIAQUÍA -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">💊 Tope celiaquía</div>
+            <div class="cfg-card-sub">Monto máximo aprobado automáticamente para reintegros por celiaquía</div>
+            <div class="cfg-inline">
+              <input type="number" id="cfg_topeCeliaquía" placeholder="Ej: 5000" min="0" step="0.01">
+              <span style="color:var(--text2); font-size:13px; white-space:nowrap">$ ARS</span>
+            </div>
+          </div>
+
+          <!-- MOTIVOS REINTEGRO -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">📋 Motivos de reintegro</div>
+            <div class="cfg-list" id="cfgList_motivosReintegro"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_motivosReintegro" placeholder="Nuevo motivo…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('motivosReintegro')">+</button>
+            </div>
+          </div>
+
+          <!-- PRESTACIONES DOMICILIARIAS POR CATEGORÍA -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">👨‍⚕️ Prestaciones de RRHH</div>
+            <div class="cfg-card-sub">Enfermería, kinesiología, cuidadores… (Int. Domiciliaria)</div>
+            <div class="cfg-list" id="cfgList_prestRRHH"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_prestRRHH" placeholder="Nueva prestación de RRHH…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('prestRRHH')">+</button>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-title">🛏️ Prestaciones de Equipamiento</div>
+            <div class="cfg-card-sub">Oxígeno, cama ortopédica, silla de ruedas… (Int. Domiciliaria)</div>
+            <div class="cfg-list" id="cfgList_prestEquipamiento"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_prestEquipamiento" placeholder="Nuevo equipamiento…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('prestEquipamiento')">+</button>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-title">💊 Prestaciones de Medicación</div>
+            <div class="cfg-card-sub">Medicamentos que consume el afiliado (Int. Domiciliaria)</div>
+            <div class="cfg-list" id="cfgList_prestMedicacion"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_prestMedicacion" placeholder="Nueva medicación…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('prestMedicacion')">+</button>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-title">🧴 Prestaciones de Insumos</div>
+            <div class="cfg-card-sub">Gasas, pañales, algodón, sondas… (Int. Domiciliaria)</div>
+            <div class="cfg-list" id="cfgList_prestInsumos"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_prestInsumos" placeholder="Nuevo insumo…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('prestInsumos')">+</button>
+            </div>
+          </div>
+
+          <div class="cfg-card">
+            <div class="cfg-card-title">🥛 Prestaciones de Alimentación</div>
+            <div class="cfg-card-sub">Leches, fórmulas, vías de alimentación… (Int. Domiciliaria)</div>
+            <div class="cfg-list" id="cfgList_prestAlimentacion"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_prestAlimentacion" placeholder="Nueva prestación de alimentación…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('prestAlimentacion')">+</button>
+            </div>
+          </div>
+
+          <!-- INSUMOS AMBULATORIOS -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">🩺 Insumos ambulatorios</div>
+            <div class="cfg-card-sub">Usados en Insumos Ambulatorios</div>
+            <div class="cfg-list" id="cfgList_insumosAmb"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_insumosAmb" placeholder="Nuevo insumo…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('insumosAmb')">+</button>
+            </div>
+          </div>
+
+          <!-- MATERIALES CIRUGÍA -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">⚕️ Materiales de cirugía</div>
+            <div class="cfg-card-sub">Usados en Internaciones → Cirugías</div>
+            <div class="cfg-list" id="cfgList_materialesCirugia"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_materialesCirugia" placeholder="Nuevo material…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('materialesCirugia')">+</button>
+            </div>
+          </div>
+
+          <!-- TIPOS DE SERVICIO -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">🛏️ Tipos de servicio</div>
+            <div class="cfg-card-sub">Piso, UTI, UTIP… (usados en Internaciones)</div>
+            <div class="cfg-list" id="cfgList_tiposServicio"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_tiposServicio" placeholder="Nuevo tipo de servicio…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('tiposServicio')">+</button>
+            </div>
+          </div>
+
+          <!-- CLÍNICAS -->
+          <div class="cfg-card">
+            <div class="cfg-card-title">🏨 Clínicas / Instituciones</div>
+            <div class="cfg-card-sub">Usadas en Internaciones</div>
+            <div class="cfg-list" id="cfgList_clinicas"></div>
+            <div class="cfg-add-row">
+              <input id="cfgInput_clinicas" placeholder="Nueva clínica…">
+              <button class="btn btn-ghost" onclick="cfgAddItem('clinicas')">+</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AFILIADO -->
+<div id="modalAfiliado" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalAfiliadoTitle">Nuevo afiliado</div>
+      <button class="modal-close" onclick="closeModal('modalAfiliado')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid cols-2">
+        <div class="form-field span-2"><label class="form-label">Nombre completo <span>*</span></label><input class="form-input" id="af_nombre" placeholder="Apellido, Nombre"></div>
+        <div class="form-field"><label class="form-label">DNI <span>*</span></label><input class="form-input" id="af_dni" placeholder="00.000.000" maxlength="12"></div>
+        <div class="form-field"><label class="form-label">Seccional</label><input class="form-input" id="af_seccional" placeholder="Ej: Capital, Córdoba…"></div>
+        <div class="form-field span-2"><label class="form-label">Domicilio</label><input class="form-input" id="af_domicilio" placeholder="Calle, número, localidad"></div>
+        <div class="form-field"><label class="form-label">Teléfono</label><input class="form-input" id="af_telefono" placeholder="11-1234-5678"></div>
+        <div class="form-field"><label class="form-label">Tipo de servicio</label>
+          <select class="form-select" id="af_tipoServicio">
+            <option value="">— Seleccionar —</option>
+            <option>Médico</option><option>Odontológico</option><option>Farmacéutico</option><option>Integral</option><option>Otro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalAfiliado')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveAfiliado" onclick="saveAfiliado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROVEEDOR -->
+<div id="modalProveedor" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalProveedorTitle">Nuevo proveedor</div>
+      <button class="modal-close" onclick="closeModal('modalProveedor')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid cols-2">
+        <div class="form-field span-2"><label class="form-label">Nombre empresa <span>*</span></label><input class="form-input" id="pv_empresa" placeholder="Razón social o nombre comercial"></div>
+        <div class="form-field"><label class="form-label">Contacto</label><input class="form-input" id="pv_contacto" placeholder="Nombre y apellido"></div>
+        <div class="form-field"><label class="form-label">Teléfono / Mail</label><input class="form-input" id="pv_contactoInfo" placeholder="Tel o email"></div>
+        <div class="form-field"><label class="form-label">Tipo de proveedor</label>
+          <select class="form-select" id="pv_tipo">
+            <option value="">— Seleccionar —</option>
+            <option>Insumos</option><option>Materiales</option><option>Ambos</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">Tipo de entrega</label><input class="form-input" id="pv_tipoEntrega" placeholder="Ej: Retiro, Envío, Mixto"></div>
+        <div class="form-field span-2"><label class="form-label">Rubro / Productos que comercializa</label><input class="form-input" id="pv_rubro" placeholder="Ej: Medicación alto costo, insumos de diabetes…"></div>
+        <div class="form-field"><label class="form-label">Condición de pago</label><input class="form-input" id="pv_condicionPago" placeholder="Ej: 60 días"></div>
+        <div class="form-field"><label class="form-label">Calificación (1-5)</label>
+          <select class="form-select" id="pv_calificacion">
+            <option value="">— Sin calificar —</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          </select>
+        </div>
+        <div class="form-field span-2"><label class="form-label">Notas / Comentarios</label><textarea class="form-textarea" id="pv_notas" placeholder="Observaciones sobre el proveedor…" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalProveedor')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveProveedor" onclick="saveProveedor()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INTERNACIÓN -->
+<div id="modalInternacion" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="modalInternacionTitle">Nueva internación</div>
+      <button class="modal-close" onclick="closeModal('modalInternacion')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- 1. AFILIADO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Afiliado</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Buscar por DNI <span>*</span></label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="int_dniSearch" placeholder="Ingresá el DNI…" oninput="autocompleteAfiliado()" autocomplete="off">
+              <div class="autocomplete-list" id="afilAutocompleteList"></div>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">O buscar por nombre</label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="int_nombreSearch" placeholder="Ingresá el nombre…" oninput="autocompleteAfiliadoNombre()" autocomplete="off">
+              <div class="autocomplete-list" id="afilAutocompleteListNombre"></div>
+            </div>
+          </div>
+        </div>
+        <div id="afilCardWrap">
+          <div class="afil-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="afil-card-data">
+              <div class="nombre" id="afilCardNombre">—</div>
+              <div class="detalle" id="afilCardDetalle">—</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="int_afiliadoId">
+        <input type="hidden" id="int_afiliadoDni">
+        <input type="hidden" id="int_afiliadoNombre">
+      </div>
+
+      <!-- CLÍNICA Y DIAGNÓSTICO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Clínica y diagnóstico</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Clínica / Institución</label>
+            <select class="form-select" id="int_clinica">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Tipo de servicio</label>
+            <select class="form-select" id="int_tipoServicio">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Piso / Sector</label>
+            <input class="form-input" id="int_piso" placeholder="Opcional — Ej: 3° piso, Ala B">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Cama / Habitación</label>
+            <input class="form-input" id="int_cama" placeholder="Opcional — Ej: 214, Cama 5">
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label">Diagnóstico de ingreso <span>*</span></label>
+            <input class="form-input" id="int_diagnostico" placeholder="Motivo por el cual ingresa el paciente">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. FECHAS Y ESTADO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Fechas y estado</div>
+        <div class="form-grid cols-3">
+          <div class="form-field">
+            <label class="form-label">Fecha de ingreso <span>*</span></label>
+            <input type="date" class="form-input" id="int_fechaIngreso">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Fecha de alta</label>
+            <input type="date" class="form-input" id="int_fechaAlta">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Estado <span>*</span></label>
+            <select class="form-select" id="int_estado">
+              <option value="">— Seleccionar —</option>
+              <option>Internado</option>
+              <option>Alta</option>
+              <option>Falta O.V.I.T.O.</option>
+              <option>Suspendido</option>
+              <option>Fallecido</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. PRÓRROGAS -->
+      <div class="modal-section">
+        <div class="modal-section-title">Prórrogas</div>
+        <div class="list-acum" id="listProrrogas"></div>
+        <div class="add-row">
+          <div class="form-field"><label class="form-label">Desde</label><input type="date" class="form-input" id="pr_desde"></div>
+          <div class="form-field"><label class="form-label">Hasta</label><input type="date" class="form-input" id="pr_hasta"></div>
+          <div class="form-field">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="pr_estado">
+              <option>Presentada</option>
+              <option>No presentada</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" onclick="addProrroga()" style="margin-bottom:0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. CIRUGÍAS -->
+      <div class="modal-section">
+        <div class="modal-section-title">Cirugías</div>
+        <div class="form-grid cols-2">
+          <div class="form-field span-2">
+            <label class="form-label">Tipo de cirugía</label>
+            <input class="form-input" id="int_cirugiaTipo" placeholder="Ej: Colecistectomía, Apendicectomía…">
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label">Materiales utilizados</label>
+            <div class="add-row" style="margin-bottom:8px">
+              <div class="form-field" style="flex:2">
+                <select class="form-select" id="int_materialSelect">
+                  <option value="">— Elegir de la lista —</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" type="button" onclick="addMaterialCirugia()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Agregar
+              </button>
+            </div>
+            <textarea class="form-textarea" id="int_cirugiaMateriales" placeholder="Los materiales elegidos aparecen acá, uno por línea. También podés escribir a mano…" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. ESTUDIOS -->
+      <div class="modal-section">
+        <div class="modal-section-title">Estudios solicitados</div>
+        <div class="list-acum" id="listEstudios"></div>
+        <div class="add-row">
+          <div class="form-field" style="flex:2"><label class="form-label">Nombre del estudio</label><input class="form-input" id="est_nombre" placeholder="Ej: Hemograma, Eco abdominal…"></div>
+          <div class="form-field">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="est_estado">
+              <option>Pendiente</option>
+              <option>Autorizado</option>
+              <option>Rechazado</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" onclick="addEstudio()" style="margin-bottom:0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalInternacion')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveInternacion" onclick="saveInternacion()">Guardar internación</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INTERNACIÓN DOMICILIARIA -->
+<div id="modalIntDom" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="modalIntDomTitle">Nueva internación domiciliaria</div>
+      <button class="modal-close" onclick="closeModal('modalIntDom')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- AFILIADO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Afiliado</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Buscar por DNI <span>*</span></label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="idom_dniSearch" placeholder="Ingresá el DNI…" oninput="acAfiliado('idom_dniSearch','idom_acList','idom','dni')" autocomplete="off">
+              <div class="autocomplete-list" id="idom_acList"></div>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">O buscar por nombre</label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="idom_nombreSearch" placeholder="Ingresá el nombre…" oninput="acAfiliado('idom_nombreSearch','idom_acListNombre','idom','nombre')" autocomplete="off">
+              <div class="autocomplete-list" id="idom_acListNombre"></div>
+            </div>
+          </div>
+        </div>
+        <div id="idom_cardWrap" class="afil-card-wrap-generic">
+          <div class="afil-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="afil-card-data">
+              <div class="nombre" id="idom_cardNombre">—</div>
+              <div class="detalle" id="idom_cardDetalle">—</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="idom_afiliadoId">
+        <input type="hidden" id="idom_afiliadoDni">
+        <input type="hidden" id="idom_afiliadoNombre">
+      </div>
+
+      <!-- ESTADO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Estado</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Estado de la internación</label>
+            <select class="form-select" id="idom_estado">
+              <option value="">— Seleccionar —</option>
+              <option>Activo</option><option>Alta</option><option>Suspendido</option><option>Fallecido</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESTACIONES AUTORIZADAS -->
+      <div class="modal-section">
+        <div class="modal-section-title">Prestaciones autorizadas</div>
+        <div class="list-acum" id="listPrestaciones"></div>
+        <div class="add-row">
+          <div class="form-field" style="flex:1.3">
+            <label class="form-label">Categoría</label>
+            <select class="form-select" id="prest_categoria" onchange="onPrestCategoriaChange()">
+              <option value="">— Categoría —</option>
+              <option value="rrhh">Prestaciones de RRHH</option>
+              <option value="equipamiento">Prestaciones de Equipamiento</option>
+              <option value="medicacion">Prestaciones de Medicación</option>
+              <option value="insumos">Prestaciones de Insumos</option>
+              <option value="alimentacion">Prestaciones de Alimentación</option>
+            </select>
+          </div>
+          <div class="form-field" style="flex:1.5">
+            <label class="form-label">Ítem</label>
+            <select class="form-select" id="prest_item">
+              <option value="">— Elegir —</option>
+            </select>
+          </div>
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Cantidad / frecuencia</label>
+            <input class="form-input" id="prest_cantidad" placeholder="Ej: 3 x semana, 10 unid.">
+          </div>
+          <button class="btn btn-ghost" type="button" onclick="addPrestacion()" style="margin-bottom:0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+      <!-- PLANILLA 6 MESES -->
+      <div class="modal-section">
+        <div class="modal-section-title">Planilla semestral</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Fecha última planilla presentada</label>
+            <input type="date" class="form-input" id="idom_planillaFecha" onchange="checkPlanilla('idom')">
+          </div>
+          <div class="form-field" style="justify-content:flex-end; padding-bottom:2px;">
+            <label class="form-label">Confirmación</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:10px 0;">
+              <input type="checkbox" id="idom_planillaOk" style="accent-color:var(--accent);width:16px;height:16px;">
+              Planilla presentada y confirmada
+            </label>
+          </div>
+        </div>
+        <div id="idom_planillaAlerta" style="display:none;"></div>
+      </div>
+
+      <!-- COTIZACIÓN -->
+      <div class="modal-section">
+        <div class="modal-section-title">Cotización — Proveedores</div>
+        <div id="idom_cotizWrap">
+          <div class="cotiz-empty">No hay proveedores cargados</div>
+        </div>
+      </div>
+
+      <!-- OBSERVACIONES -->
+      <div class="modal-section">
+        <div class="modal-section-title">Observaciones</div>
+        <textarea class="form-textarea" id="idom_obs" placeholder="Notas adicionales…" rows="3"></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalIntDom')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveIntDom" onclick="saveIntDom()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INSUMO AMBULATORIO -->
+<div id="modalInsumo" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="modalInsumoTitle">Nuevo insumo ambulatorio</div>
+      <button class="modal-close" onclick="closeModal('modalInsumo')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- AFILIADO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Afiliado</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Buscar por DNI <span>*</span></label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="ins_dniSearch" placeholder="Ingresá el DNI…" oninput="acAfiliado('ins_dniSearch','ins_acList','ins','dni')" autocomplete="off">
+              <div class="autocomplete-list" id="ins_acList"></div>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">O buscar por nombre</label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="ins_nombreSearch" placeholder="Ingresá el nombre…" oninput="acAfiliado('ins_nombreSearch','ins_acListNombre','ins','nombre')" autocomplete="off">
+              <div class="autocomplete-list" id="ins_acListNombre"></div>
+            </div>
+          </div>
+        </div>
+        <div id="ins_cardWrap" class="afil-card-wrap-generic">
+          <div class="afil-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="afil-card-data">
+              <div class="nombre" id="ins_cardNombre">—</div>
+              <div class="detalle" id="ins_cardDetalle">—</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="ins_afiliadoId">
+        <input type="hidden" id="ins_afiliadoDni">
+        <input type="hidden" id="ins_afiliadoNombre">
+      </div>
+
+      <!-- INSUMO -->
+      <div class="modal-section">
+        <div class="modal-section-title">Insumo</div>
+        <div class="form-grid cols-2">
+          <div class="form-field span-2">
+            <label class="form-label">Insumo ambulatorio <span>*</span></label>
+            <select class="form-select" id="ins_insumo" onchange="onInsumoChange('ins')">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-field span-2">
+            <label class="form-label">Observaciones</label>
+            <textarea class="form-textarea" id="ins_obs" placeholder="Notas adicionales…" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- COTIZACIÓN -->
+      <div class="modal-section">
+        <div class="modal-section-title">Cotización — Proveedores</div>
+        <div id="ins_cotizWrap">
+          <div class="cotiz-empty">Seleccioná un insumo para ver los proveedores disponibles</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalInsumo')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveInsumo" onclick="saveInsumo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REINTEGRO -->
+<div id="modalReintegro" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalReintegroTitle">Nuevo reintegro</div>
+      <button class="modal-close" onclick="closeModal('modalReintegro')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Afiliado</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Buscar por DNI <span>*</span></label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="rei_dniSearch" placeholder="Ingresá el DNI…" oninput="acAfiliado('rei_dniSearch','rei_acList','rei','dni')" autocomplete="off">
+              <div class="autocomplete-list" id="rei_acList"></div>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">O buscar por nombre</label>
+            <div class="autocomplete-wrap">
+              <input class="form-input" id="rei_nombreSearch" placeholder="Ingresá el nombre…" oninput="acAfiliado('rei_nombreSearch','rei_acListNombre','rei','nombre')" autocomplete="off">
+              <div class="autocomplete-list" id="rei_acListNombre"></div>
+            </div>
+          </div>
+        </div>
+        <div id="rei_cardWrap" class="afil-card-wrap-generic">
+          <div class="afil-card">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div class="afil-card-data">
+              <div class="nombre" id="rei_cardNombre">—</div>
+              <div class="detalle" id="rei_cardDetalle">—</div>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="rei_afiliadoId">
+        <input type="hidden" id="rei_afiliadoDni">
+        <input type="hidden" id="rei_afiliadoNombre">
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Motivo y estado</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Motivo <span>*</span></label>
+            <select class="form-select" id="rei_motivo" onchange="onMotivoChange()">
+              <option value="">— Seleccionar —</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="rei_estado">
+              <option value="">— Seleccionar —</option>
+              <option>Pendiente</option><option>Aprobado</option><option>Rechazado</option><option>Pagado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Montos</div>
+        <div class="form-grid cols-2">
+          <div class="form-field">
+            <label class="form-label">Monto solicitado <span>*</span></label>
+            <input type="number" class="form-input" id="rei_montoSolicitado" placeholder="0.00" min="0" step="0.01" oninput="onMontoChange()">
+          </div>
+          <div class="form-field">
+            <label class="form-label" id="rei_montoAprobadoLabel">Monto aprobado</label>
+            <input type="number" class="form-input" id="rei_montoAprobado" placeholder="0.00" min="0" step="0.01">
+          </div>
+        </div>
+        <div id="rei_topeInfo" style="display:none; margin-top:10px; padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent);"></div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Observaciones</div>
+        <textarea class="form-textarea" id="rei_obs" placeholder="Notas adicionales…" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalReintegro')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveReintegro" onclick="saveReintegro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FICHA TÉCNICA (solo lectura) -->
+<div id="modalFicha" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="modalFichaTitle">Ficha</div>
+      <button class="modal-close" onclick="closeModal('modalFicha')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="fichaBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalFicha')">Cerrar</button>
+      <button class="btn btn-primary" id="btnDescargarFicha" onclick="descargarFichaCSV()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar CSV
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+const GAS_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbx8mFhjyrHDlXuJYY2K0wGIhLnqUiZMLfkDMzrOOx-dBiy4P2mD_r4SSowozDFK5u2r/exec';
+let _gasUrlActiva = localStorage.getItem('ospiv_gas_url') || GAS_URL_DEFAULT;
+function getGasUrl() { return _gasUrlActiva; }
+let afiliados = [];
+let proveedores = [];
+let internaciones = [];
+let internacionesDom = [];
+let insumosAmbulatorios = [];
+let editingAfiliadoId = null;
+let editingProveedorId = null;
+let editingInternacionId = null;
+let editingIntDomId = null;
+let editingInsumoId = null;
+let tmpProrrogas = [];
+let tmpEstudios = [];
+
+// Listas de Config — se cargan desde el GAS (hoja Config)
+let cfgServiciosAutorizados = ['Kinesioterapia','Enfermería','Fonoaudiología','Terapia Ocupacional','Médico Domiciliario','Otro'];
+let cfgInsumosDom = ['Oxígeno','Silla de ruedas','Andador','Cama ortopédica','Colchón antiescaras','Pañales','Suero','Otro'];
+let cfgInsumosAmb = ['Glucómetro','Insulina','Jeringas','Tiras reactivas','Catéter','Vendas','Muletas','Otro'];
+let cfgMotivosReintegro = ['Celiaquía','Medicación','Óptica','Kinesiología','Odontología','Prótesis','Otro'];
+let cfgTopeCeliaquía = 5000;
+let cfgMaterialesCirugia = ['Prótesis de cadera','Placa de titanio','Tornillos ortopédicos','Malla herniaria','Catéter venoso','Marcapasos','Otro'];
+// Prestaciones de Internación Domiciliaria por categoría
+let cfgPrestRRHH = ['Enfermería','Kinesiología R','Kinesiología M','Médico domiciliario','Fonoaudiología','Terapia Ocupacional','Cuidador','Acompañante terapéutico'];
+let cfgPrestEquipamiento = ['Cama ortopédica','Colchón antiescaras','Oxígeno','Concentrador de oxígeno','Aspirador','Oxímetro','Silla de ruedas','Andador'];
+let cfgPrestMedicacion = ['Levetiracetam sol. oral 300ml','Clobazam x60 comp.','Ácido Valproico sol. oral 120ml','Lorazepam 60 comp.','Baclofeno 30g','Omeprazol 20g','Azitromicina 500g','Salbutamol Puff','Fluticasona aerosol','Barex Unipeg sobres'];
+let cfgPrestInsumos = ['Pañales','Alcohol en gel 500ml','Alcohol líquido 1l','Guantes','Algodón 500','Jeringas 10cc','Jeringas 5cc','Gasas 10x10','Baxter de alimentación 30u','Sondas','Apósitos'];
+let cfgPrestAlimentacion = ['Leche medicamentosa','Suplemento nutricional','Vía de alimentación','Fórmula enteral','Espesante'];
+let _configCargadaOk = false; // evita pisar el Sheet con defaults si la carga falló
+let cfgTiposServicio = ['Piso','UTI','UTIP','UCO','Neonatología','Terapia Intermedia','Guardia','Quirófano','Sala común','Aislamiento'];
+let cfgClinicas = ['TIKUM','UOM C','CLIMEDICA','C CALCHAQUI','S SOLANO','C BOEDO','SC QUILMES','SC F VARELA','NS BEGUI','P AVELLANEDA','S BERNAL','C RANELAGH','C NIÑO','HTAL DUHAU','SC TORCUATO','S SARMIENTO','CM TALAR','NOGOYA N','FATIMA P','FATIMA E','SC ZARATE','S CAMPANA','UOM SM','AMTA','C BUEN PAST','SC MORON','EMA SALUD SJ','EMA SALUD MZ','S MUJER','C VELEZ','M AUXILIADORA','HTAL PUBLICO','S. ROSENDO'];
+let reintegros = [];
+let editingReintegroId = null;
+let tmpPrestaciones = [];
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+  setDate();
+  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.autocomplete-wrap')) {
+      document.querySelectorAll('.autocomplete-list').forEach(l => l.classList.remove('show'));
+    }
+  });
+});
+
+function setDate() {
+  const d = new Date();
+  document.getElementById('topbarDate').textContent =
+    d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// LOGIN
+async function doLogin() {
+  const pass = document.getElementById('loginPass').value.trim();
+  if (!pass) return;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Verificando…';
+  // Contraseña fija — también se puede cambiar desde Configuración en el GAS
+  const PASSWORD = 'Ospiv453';
+  if (pass === PASSWORD) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appShell').classList.remove('hidden');
+    loadAll();
+  } else {
+    document.getElementById('loginError').classList.add('show');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Ingresar';
+}
+function togglePass() {
+  const inp = document.getElementById('loginPass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function logout() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').classList.remove('show');
+}
+
+// NAVIGATION
+const pageTitles = { dashboard:'Dashboard', afiliados:'Afiliados', proveedores:'Proveedores', internaciones:'Internaciones', internaciondom:'Int. Domiciliaria', insumosambulatorios:'Insumos Ambulatorios', reintegros:'Reintegros', configuracion:'Configuración' };
+function navigate(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageTitles[page] || page;
+  if (page === 'configuracion') {
+    document.getElementById('cfg_gasUrl').value = _gasUrlActiva;
+    document.getElementById('cfg_status').style.display = 'none';
+    document.getElementById('cfg_saveStatus').style.display = 'none';
+    document.getElementById('cfg_topeCeliaquía').value = cfgTopeCeliaquía;
+    document.getElementById('cfg_pass').value = '';
+    cfgRenderList('motivosReintegro', cfgMotivosReintegro);
+    cfgRenderList('insumosAmb', cfgInsumosAmb);
+    cfgRenderList('materialesCirugia', cfgMaterialesCirugia);
+    cfgRenderList('prestRRHH', cfgPrestRRHH);
+    cfgRenderList('prestEquipamiento', cfgPrestEquipamiento);
+    cfgRenderList('prestMedicacion', cfgPrestMedicacion);
+    cfgRenderList('prestInsumos', cfgPrestInsumos);
+    cfgRenderList('prestAlimentacion', cfgPrestAlimentacion);
+    cfgRenderList('tiposServicio', cfgTiposServicio);
+    cfgRenderList('clinicas', cfgClinicas);
+  }
+}
+
+// LOAD ALL
+async function loadAll() {
+  await Promise.all([loadConfigFromGas(), loadAfiliados(), loadProveedores(), loadInternaciones(), loadIntDom(), loadInsumos(), loadReintegros()]);
+  updateDashboard();
+  populateConfigSelects();
+}
+
+async function sincronizarTodo() {
+  const btn = document.getElementById('btnSync');
+  const icon = document.getElementById('syncIcon');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  icon.classList.add('spinning');
+  try {
+    await loadAll();
+    showToast('Datos sincronizados desde el Sheet', 'success');
+    // Regenerar la hoja Resumen en segundo plano (no bloquea la interfaz)
+    gasCall({ action: 'actualizarResumen' }).catch(() => {});
+  } catch {
+    showToast('Error al sincronizar', 'error');
+  } finally {
+    icon.classList.remove('spinning');
+    btn.disabled = false;
+  }
+}
+
+async function loadConfigFromGas() {
+  try {
+    const res = await gasCall({ action: 'getConfig' });
+    // Si el Sheet tiene una URL guardada y es distinta a la activa, adoptarla
+    // (así queda fija para todas las compus una vez configurada)
+    if (res.gasUrl && res.gasUrl.startsWith('https://') && res.gasUrl !== _gasUrlActiva) {
+      _gasUrlActiva = res.gasUrl;
+      localStorage.setItem('ospiv_gas_url', res.gasUrl);
+    }
+    // OJO: un array vacío [] es truthy en JS. Si el Sheet devuelve una lista
+    // vacía NO debe pisar los valores por defecto → exigimos que tenga items.
+    const lista = v => Array.isArray(v) && v.length > 0;
+    if (lista(res.insumosAmb)) cfgInsumosAmb = res.insumosAmb;
+    if (lista(res.motivosReintegro)) cfgMotivosReintegro = res.motivosReintegro;
+    if (lista(res.materialesCirugia)) cfgMaterialesCirugia = res.materialesCirugia;
+    if (lista(res.prestRRHH)) cfgPrestRRHH = res.prestRRHH;
+    if (lista(res.prestEquipamiento)) cfgPrestEquipamiento = res.prestEquipamiento;
+    if (lista(res.prestMedicacion)) cfgPrestMedicacion = res.prestMedicacion;
+    if (lista(res.prestInsumos)) cfgPrestInsumos = res.prestInsumos;
+    if (lista(res.prestAlimentacion)) cfgPrestAlimentacion = res.prestAlimentacion;
+    if (lista(res.tiposServicio)) cfgTiposServicio = res.tiposServicio;
+    if (lista(res.clinicas)) cfgClinicas = res.clinicas;
+    if (res.topeCeliaquía !== undefined) cfgTopeCeliaquía = parseFloat(res.topeCeliaquía) || 5000;
+    _configCargadaOk = true;
+  } catch { _configCargadaOk = false; /* usa defaults, pero bloquea guardar */ }
+}
+async function loadAfiliados() {
+  try {
+    const res = await gasCall({ action: 'getAfiliados' });
+    afiliados = res.data || [];
+    renderAfiliados();
+  } catch { showToast('Error al cargar afiliados', 'error'); }
+}
+async function loadProveedores() {
+  try {
+    const res = await gasCall({ action: 'getProveedores' });
+    proveedores = res.data || [];
+    renderProveedores();
+  } catch { showToast('Error al cargar proveedores', 'error'); }
+}
+async function loadInternaciones() {
+  try {
+    const res = await gasCall({ action: 'getInternaciones' });
+    internaciones = res.data || [];
+    renderInternaciones();
+  } catch { showToast('Error al cargar internaciones', 'error'); }
+}
+
+function updateDashboard() {
+  // Internaciones hospitalarias
+  document.getElementById('statInternados').textContent = internaciones.filter(i => i.estado === 'Internado').length;
+  document.getElementById('statInternacionesAlta').textContent = internaciones.filter(i => i.estado === 'Alta').length;
+  document.getElementById('statOvito').textContent = internaciones.filter(i => i.estado === 'Falta O.V.I.T.O.').length;
+
+  // Int. domiciliaria
+  document.getElementById('statIntDomActivas').textContent = internacionesDom.filter(i => i.estado === 'Activo').length;
+  let planVencer = 0, planVencidas = 0;
+  const planillasDetalle = [];
+  internacionesDom.forEach(r => {
+    if (!r.planillaFecha) return;
+    const al = planillaAlerta(r.planillaFecha);
+    if (!al) return;
+    if (al.tipo === 'warn') { planVencer++; planillasDetalle.push({ nombre: r.afiliadoNombre, insumo: r.insumo, msg: al.msg, tipo: 'warn' }); }
+    if (al.tipo === 'venc') { planVencidas++; planillasDetalle.push({ nombre: r.afiliadoNombre, insumo: r.insumo, msg: al.msg, tipo: 'venc' }); }
+  });
+  document.getElementById('statPlanillasVencer').textContent = planVencer;
+  document.getElementById('statPlanillasVencidas').textContent = planVencidas;
+
+  // Detalle: quiénes vencen (vencidas primero)
+  planillasDetalle.sort((a, b) => (a.tipo === 'venc' ? -1 : 1) - (b.tipo === 'venc' ? -1 : 1));
+  const planEl = document.getElementById('dashPlanillasList');
+  planEl.innerHTML = planillasDetalle.length
+    ? planillasDetalle.map(p => `
+        <div class="cfg-list-item" style="border-left:3px solid ${p.tipo === 'venc' ? 'var(--danger)' : 'var(--warning)'}">
+          <span><strong>${esc(p.nombre)}</strong>${p.insumo ? ' · ' + esc(p.insumo) : ''}<br>
+          <span style="font-size:11px;color:var(--text3)">${esc(p.msg)}</span></span>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">Sin planillas por vencer 🎉</div>';
+
+  // Insumos ambulatorios
+  document.getElementById('statInsumosMes').textContent = insumosAmbulatorios.length;
+  document.getElementById('statInsumosMesSub').textContent = 'total registrados';
+
+  // Reintegros
+  const reiPendientes = reintegros.filter(r => r.estado === 'Pendiente').length;
+  const reiAprobados = reintegros.filter(r => r.estado === 'Aprobado').length;
+  const reiPagados = reintegros.filter(r => r.estado === 'Pagado').length;
+  const montoAprobado = reintegros
+    .filter(r => r.estado === 'Aprobado' || r.estado === 'Pagado')
+    .reduce((acc, r) => acc + (parseFloat(r.montoAprobado) || 0), 0);
+  document.getElementById('statReiPendientes').textContent = reiPendientes;
+  document.getElementById('statReiAprobados').textContent = reiAprobados;
+  document.getElementById('statReiPagados').textContent = reiPagados;
+  document.getElementById('statReiMontoMes').textContent = montoAprobado > 0
+    ? '$' + montoAprobado.toLocaleString('es-AR', { minimumFractionDigits: 2 })
+    : '$0';
+
+  // Ranking de cirugías más solicitadas
+  const conteo = {};
+  internaciones.forEach(i => {
+    const tipo = (i.cirugiaTipo || '').trim();
+    if (!tipo) return;
+    conteo[tipo] = (conteo[tipo] || 0) + 1;
+  });
+  const ranking = Object.entries(conteo).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const cirEl = document.getElementById('dashCirugiasList');
+  cirEl.innerHTML = ranking.length
+    ? ranking.map(([tipo, count], i) => `
+        <div class="cfg-list-item">
+          <span><strong>${i + 1}.</strong> ${esc(tipo)}</span>
+          <span class="badge badge-blue">${count}</span>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:4px 0">Sin cirugías registradas todavía</div>';
+}
+
+// ── AFILIADOS ──
+function renderAfiliados(data) {
+  const list = data || afiliados;
+  const tbody = document.getElementById('bodyAfiliados');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="table-empty"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Sin afiliados registrados</div></td></tr>'; return; }
+  const tipoBadge = t => { const map = {'Médico':'badge-blue','Odontológico':'badge-green','Farmacéutico':'badge-orange','Integral':'badge-green'}; return `<span class="badge ${map[t]||'badge-gray'}">${t||'—'}</span>`; };
+  tbody.innerHTML = list.map(a => `<tr>
+    <td><strong>${esc(a.nombre)}</strong></td>
+    <td>${esc(a.dni)}</td><td>${esc(a.seccional)||'—'}</td><td>${esc(a.telefono)||'—'}</td>
+    <td>${a.tipoServicio ? tipoBadge(a.tipoServicio) : '—'}</td>
+    <td><div class="actions-cell">
+      <button class="icon-btn edit" onclick="editAfiliado('${a.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="icon-btn del" onclick="deleteAfiliado('${a.id}','${esc(a.nombre)}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+    </div></td>
+  </tr>`).join('');
+}
+function filterAfiliados() {
+  const q = document.getElementById('searchAfiliados').value.toLowerCase();
+  renderAfiliados(afiliados.filter(a => (a.nombre||'').toLowerCase().includes(q) || (a.dni||'').toLowerCase().includes(q)));
+}
+function openAfiliadoModal(id) {
+  editingAfiliadoId = id || null;
+  document.getElementById('modalAfiliadoTitle').textContent = id ? 'Editar afiliado' : 'Nuevo afiliado';
+  if (id) {
+    const a = afiliados.find(x => x.id === id);
+    if (a) { document.getElementById('af_nombre').value=a.nombre||''; document.getElementById('af_dni').value=a.dni||''; document.getElementById('af_seccional').value=a.seccional||''; document.getElementById('af_domicilio').value=a.domicilio||''; document.getElementById('af_telefono').value=a.telefono||''; document.getElementById('af_tipoServicio').value=a.tipoServicio||''; }
+  } else {
+    ['af_nombre','af_dni','af_seccional','af_domicilio','af_telefono'].forEach(f => document.getElementById(f).value='');
+    document.getElementById('af_tipoServicio').value='';
+  }
+  openModal('modalAfiliado');
+}
+function editAfiliado(id) { openAfiliadoModal(id); }
+async function saveAfiliado() {
+  const nombre = document.getElementById('af_nombre').value.trim();
+  const dni = document.getElementById('af_dni').value.trim();
+  if (!nombre || !dni) { showToast('Nombre y DNI son obligatorios', 'error'); return; }
+  const btn = document.getElementById('btnSaveAfiliado');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    await gasCall({ action:'saveAfiliado', data:{ id:editingAfiliadoId||'', nombre, dni, seccional:document.getElementById('af_seccional').value.trim(), domicilio:document.getElementById('af_domicilio').value.trim(), telefono:document.getElementById('af_telefono').value.trim(), tipoServicio:document.getElementById('af_tipoServicio').value } });
+    closeModal('modalAfiliado');
+    showToast(editingAfiliadoId ? 'Afiliado actualizado' : 'Afiliado creado', 'success');
+    await loadAfiliados(); updateDashboard();
+  } catch { showToast('Error al guardar afiliado', 'error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar'; }
+}
+async function deleteAfiliado(id, nombre) {
+  if (!confirm(`¿Eliminar a "${nombre}"?`)) return;
+  try { await gasCall({ action:'deleteAfiliado', id }); showToast('Afiliado eliminado','success'); await loadAfiliados(); updateDashboard(); }
+  catch { showToast('Error al eliminar afiliado','error'); }
+}
+
+// ── PROVEEDORES ──
+function renderProveedores(data) {
+  const list = data || proveedores;
+  const tbody = document.getElementById('bodyProveedores');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="table-empty"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>Sin proveedores registrados</div></td></tr>'; return; }
+  const tipoBadge = t => { const map={'Insumos':'badge-blue','Materiales':'badge-orange','Ambos':'badge-green'}; return `<span class="badge ${map[t]||'badge-gray'}">${t||'—'}</span>`; };
+  const estrellas = c => { const n = parseInt(c); return n ? '★'.repeat(n) + '☆'.repeat(5-n) : '—'; };
+  tbody.innerHTML = list.map(p => `<tr>
+    <td><strong class="link-nombre" onclick="verFichaProveedor('${p.id}')">${esc(p.empresa)}</strong></td><td>${esc(p.contacto)||'—'}</td>
+    <td class="td-sub">${esc(p.contactoInfo)||'—'}</td>
+    <td class="td-sub">${esc(p.rubro)||'—'}</td>
+    <td>${p.tipo ? tipoBadge(p.tipo) : '—'}</td>
+    <td class="td-sub">${esc(p.condicionPago)||'—'}</td>
+    <td style="color:var(--warning);white-space:nowrap">${estrellas(p.calificacion)}</td>
+    <td><div class="actions-cell">
+      <button class="icon-btn edit" onclick="editProveedor('${p.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="icon-btn del" onclick="deleteProveedor('${p.id}','${esc(p.empresa)}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+    </div></td>
+  </tr>`).join('');
+}
+function filterProveedores() {
+  const q = document.getElementById('searchProveedores').value.toLowerCase();
+  renderProveedores(proveedores.filter(p => (p.empresa||'').toLowerCase().includes(q)||(p.tipo||'').toLowerCase().includes(q)||(p.contacto||'').toLowerCase().includes(q)));
+}
+function openProveedorModal(id) {
+  editingProveedorId = id || null;
+  document.getElementById('modalProveedorTitle').textContent = id ? 'Editar proveedor' : 'Nuevo proveedor';
+  if (id) {
+    const p = proveedores.find(x => x.id === id);
+    if (p) {
+      document.getElementById('pv_empresa').value=p.empresa||'';
+      document.getElementById('pv_contacto').value=p.contacto||'';
+      document.getElementById('pv_contactoInfo').value=p.contactoInfo||'';
+      document.getElementById('pv_tipo').value=p.tipo||'';
+      document.getElementById('pv_tipoEntrega').value=p.tipoEntrega||'';
+      document.getElementById('pv_rubro').value=p.rubro||'';
+      document.getElementById('pv_condicionPago').value=p.condicionPago||'';
+      document.getElementById('pv_calificacion').value=p.calificacion||'';
+      document.getElementById('pv_notas').value=p.notas||'';
+    }
+  } else {
+    ['pv_empresa','pv_contacto','pv_contactoInfo','pv_tipoEntrega','pv_rubro','pv_condicionPago','pv_notas'].forEach(f => document.getElementById(f).value='');
+    document.getElementById('pv_tipo').value='';
+    document.getElementById('pv_calificacion').value='';
+  }
+  openModal('modalProveedor');
+}
+function editProveedor(id) { openProveedorModal(id); }
+async function saveProveedor() {
+  const empresa = document.getElementById('pv_empresa').value.trim();
+  if (!empresa) { showToast('El nombre de la empresa es obligatorio', 'error'); return; }
+  const btn = document.getElementById('btnSaveProveedor');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    await gasCall({ action:'saveProveedor', data:{
+      id:editingProveedorId||'',
+      empresa,
+      contacto:document.getElementById('pv_contacto').value.trim(),
+      contactoInfo:document.getElementById('pv_contactoInfo').value.trim(),
+      tipo:document.getElementById('pv_tipo').value,
+      tipoEntrega:document.getElementById('pv_tipoEntrega').value.trim(),
+      rubro:document.getElementById('pv_rubro').value.trim(),
+      condicionPago:document.getElementById('pv_condicionPago').value.trim(),
+      calificacion:document.getElementById('pv_calificacion').value,
+      notas:document.getElementById('pv_notas').value.trim(),
+    } });
+    closeModal('modalProveedor');
+    showToast(editingProveedorId ? 'Proveedor actualizado' : 'Proveedor creado', 'success');
+    await loadProveedores(); updateDashboard();
+  } catch { showToast('Error al guardar proveedor','error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar'; }
+}
+async function deleteProveedor(id, nombre) {
+  if (!confirm(`¿Eliminar a "${nombre}"?`)) return;
+  try { await gasCall({ action:'deleteProveedor', id }); showToast('Proveedor eliminado','success'); await loadProveedores(); updateDashboard(); }
+  catch { showToast('Error al eliminar proveedor','error'); }
+}
+
+// ── INTERNACIONES ──
+function estadoBadge(e) {
+  const map = { 'Internado':'badge-red', 'Alta':'badge-green', 'Falta O.V.I.T.O.':'badge-orange', 'Suspendido':'badge-gray', 'Fallecido':'badge-gray' };
+  return `<span class="badge ${map[e]||'badge-gray'}">${e||'—'}</span>`;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const s = String(d).trim();
+  // Formato ISO: 2026-06-29 → 29/06/2026
+  const p = s.split('-');
+  if (p.length === 3 && p[0].length === 4) return `${p[2].slice(0,2)}/${p[1]}/${p[0]}`;
+  // Formato largo del Sheet: "Mon Jun 29 2026 00:00:00 GMT-0300..."
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) return dt.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  return s;
+}
+
+// Normaliza cualquier formato de fecha a YYYY-MM-DD (para inputs type=date)
+function toISODate(d) {
+  if (!d) return '';
+  const s = String(d).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const dt = new Date(s);
+  if (isNaN(dt.getTime())) return '';
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${dt.getFullYear()}-${m}-${day}`;
+}
+
+function renderInternaciones(data) {
+  const list = data || internaciones;
+  const tbody = document.getElementById('bodyInternaciones');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="table-empty"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Sin internaciones registradas</div></td></tr>'; return; }
+  tbody.innerHTML = list.map(i => {
+    const prorrs = safeParse(i.prorrogas, []);
+    const estuds = safeParse(i.estudios, []);
+    return `<tr>
+      <td><strong class="link-nombre" onclick="verFichaInternacion('${i.id}')">${esc(i.afiliadoNombre)}</strong></td>
+      <td class="td-sub">${esc(i.afiliadoDni)}</td>
+      <td class="td-sub">${esc(i.clinica)||'—'}${(() => {
+        const ubic = [i.tipoServicio, i.piso ? 'Piso ' + i.piso : '', i.cama ? 'Cama ' + i.cama : ''].filter(Boolean).map(esc).join(' · ');
+        return ubic ? `<br><span style="font-size:11px;color:var(--text3)">${ubic}</span>` : '';
+      })()}</td>
+      <td>${fmtDate(i.fechaIngreso)}</td>
+      <td>${fmtDate(i.fechaAlta)}</td>
+      <td>${estadoBadge(i.estado)}</td>
+      <td><span class="badge badge-blue">${prorrs.length}</span></td>
+      <td><span class="badge badge-gray">${estuds.length}</span></td>
+      <td><div class="actions-cell">
+        <button class="icon-btn edit" onclick="editInternacion('${i.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="icon-btn del" onclick="deleteInternacion('${i.id}','${esc(i.afiliadoNombre)}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterInternaciones() {
+  const q = document.getElementById('searchInternaciones').value.toLowerCase();
+  const est = document.getElementById('filterEstadoInternacion').value;
+  let list = internaciones;
+  if (q) list = list.filter(i => (i.afiliadoNombre||'').toLowerCase().includes(q)||(i.afiliadoDni||'').toLowerCase().includes(q));
+  if (est) list = list.filter(i => i.estado === est);
+  renderInternaciones(list);
+}
+
+// MODAL INTERNACIÓN
+function openInternacionModal(id) {
+  editingInternacionId = id || null;
+  tmpProrrogas = [];
+  tmpEstudios = [];
+  document.getElementById('modalInternacionTitle').textContent = id ? 'Editar internación' : 'Nueva internación';
+  // reset
+  ['int_dniSearch','int_nombreSearch','int_afiliadoId','int_afiliadoDni','int_afiliadoNombre','int_fechaIngreso','int_fechaAlta','int_cirugiaTipo','int_cirugiaMateriales','int_diagnostico','int_piso','int_cama'].forEach(f => document.getElementById(f).value='');
+  document.getElementById('int_estado').value='';
+  document.getElementById('int_clinica').value='';
+  document.getElementById('int_tipoServicio').value='';
+  document.getElementById('afilCardWrap').classList.remove('show');
+
+  if (id) {
+    const intern = internaciones.find(x => x.id === id);
+    if (intern) {
+      setAfiliadoCard(intern.afiliadoId, intern.afiliadoNombre, intern.afiliadoDni);
+      document.getElementById('int_dniSearch').value = intern.afiliadoDni || '';
+      document.getElementById('int_clinica').value = intern.clinica || '';
+      document.getElementById('int_tipoServicio').value = intern.tipoServicio || '';
+      document.getElementById('int_piso').value = intern.piso || '';
+      document.getElementById('int_cama').value = intern.cama || '';
+      document.getElementById('int_diagnostico').value = intern.diagnostico || '';
+      document.getElementById('int_fechaIngreso').value = toISODate(intern.fechaIngreso);
+      document.getElementById('int_fechaAlta').value = toISODate(intern.fechaAlta);
+      document.getElementById('int_estado').value = intern.estado || '';
+      document.getElementById('int_cirugiaTipo').value = intern.cirugiaTipo || '';
+      document.getElementById('int_cirugiaMateriales').value = intern.cirugiaMateriales || '';
+      tmpProrrogas = safeParse(intern.prorrogas, []);
+      tmpEstudios = safeParse(intern.estudios, []);
+    }
+  }
+  renderProrrogas();
+  renderEstudios();
+  openModal('modalInternacion');
+}
+function editInternacion(id) { openInternacionModal(id); }
+
+async function saveInternacion() {
+  const afiliadoId = document.getElementById('int_afiliadoId').value;
+  const fechaIngreso = document.getElementById('int_fechaIngreso').value;
+  const estado = document.getElementById('int_estado').value;
+  const diagnostico = document.getElementById('int_diagnostico').value.trim();
+  if (!afiliadoId) { showToast('Seleccioná un afiliado', 'error'); return; }
+  if (!diagnostico) { showToast('El diagnóstico de ingreso es obligatorio', 'error'); return; }
+  if (!fechaIngreso) { showToast('La fecha de ingreso es obligatoria', 'error'); return; }
+  if (!estado) { showToast('Seleccioná un estado', 'error'); return; }
+
+  const btn = document.getElementById('btnSaveInternacion');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    await gasCall({ action:'saveInternacion', data:{
+      id: editingInternacionId||'',
+      afiliadoId,
+      afiliadoDni: document.getElementById('int_afiliadoDni').value,
+      afiliadoNombre: document.getElementById('int_afiliadoNombre').value,
+      clinica: document.getElementById('int_clinica').value,
+      tipoServicio: document.getElementById('int_tipoServicio').value,
+      piso: document.getElementById('int_piso').value.trim(),
+      cama: document.getElementById('int_cama').value.trim(),
+      diagnostico,
+      fechaIngreso,
+      fechaAlta: document.getElementById('int_fechaAlta').value,
+      estado,
+      cirugiaTipo: document.getElementById('int_cirugiaTipo').value.trim(),
+      cirugiaMateriales: document.getElementById('int_cirugiaMateriales').value.trim(),
+      prorrogas: JSON.stringify(tmpProrrogas),
+      estudios: JSON.stringify(tmpEstudios),
+    }});
+    closeModal('modalInternacion');
+    showToast(editingInternacionId ? 'Internación actualizada' : 'Internación creada', 'success');
+    await loadInternaciones(); updateDashboard();
+  } catch { showToast('Error al guardar internación','error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar internación'; }
+}
+
+async function deleteInternacion(id, nombre) {
+  if (!confirm(`¿Eliminar la internación de "${nombre}"?`)) return;
+  try { await gasCall({ action:'deleteInternacion', id }); showToast('Internación eliminada','success'); await loadInternaciones(); updateDashboard(); }
+  catch { showToast('Error al eliminar','error'); }
+}
+
+// AUTOCOMPLETE AFILIADO
+function autocompleteAfiliado() {
+  const q = document.getElementById('int_dniSearch').value.trim().toLowerCase();
+  const list = document.getElementById('afilAutocompleteList');
+  if (!q) { list.classList.remove('show'); return; }
+  const matches = afiliados.filter(a => (a.dni||'').toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) { list.classList.remove('show'); return; }
+  list.innerHTML = matches.map(a =>
+    `<div class="autocomplete-item" onclick="selectAfiliado('${a.id}')">
+      <div>${esc(a.nombre)}</div>
+      <div class="sub">DNI: ${esc(a.dni)} · ${esc(a.seccional)||'Sin seccional'}</div>
+    </div>`
+  ).join('');
+  list.classList.add('show');
+}
+function autocompleteAfiliadoNombre() {
+  const q = document.getElementById('int_nombreSearch').value.trim().toLowerCase();
+  const list = document.getElementById('afilAutocompleteListNombre');
+  if (!q) { list.classList.remove('show'); return; }
+  const matches = afiliados.filter(a => (a.nombre||'').toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) { list.classList.remove('show'); return; }
+  list.innerHTML = matches.map(a =>
+    `<div class="autocomplete-item" onclick="selectAfiliado('${a.id}')">
+      <div>${esc(a.nombre)}</div>
+      <div class="sub">DNI: ${esc(a.dni)} · ${esc(a.seccional)||'Sin seccional'}</div>
+    </div>`
+  ).join('');
+  list.classList.add('show');
+}
+function selectAfiliado(id) {
+  const a = afiliados.find(x => x.id === id);
+  if (!a) return;
+  setAfiliadoCard(a.id, a.nombre, a.dni);
+  document.getElementById('int_dniSearch').value = a.dni;
+  document.getElementById('int_nombreSearch').value = a.nombre;
+  document.getElementById('afilAutocompleteList').classList.remove('show');
+  document.getElementById('afilAutocompleteListNombre').classList.remove('show');
+}
+function setAfiliadoCard(id, nombre, dni) {
+  document.getElementById('int_afiliadoId').value = id || '';
+  document.getElementById('int_afiliadoDni').value = dni || '';
+  document.getElementById('int_afiliadoNombre').value = nombre || '';
+  document.getElementById('afilCardNombre').textContent = nombre || '—';
+  const a = afiliados.find(x => x.id === id);
+  document.getElementById('afilCardDetalle').textContent = a ? `DNI: ${a.dni} · Seccional: ${a.seccional||'—'} · ${a.tipoServicio||'—'}` : `DNI: ${dni||'—'}`;
+  document.getElementById('afilCardWrap').classList.add('show');
+}
+
+// PRÓRROGAS
+function renderProrrogas() {
+  const el = document.getElementById('listProrrogas');
+  if (!tmpProrrogas.length) { el.innerHTML = '<div class="list-acum-empty">Sin prórrogas registradas</div>'; return; }
+  const estBadge = e => e === 'Presentada' ? 'badge-green' : 'badge-orange';
+  el.innerHTML = tmpProrrogas.map((p, i) => `
+    <div class="list-acum-item">
+      <div class="item-info">
+        <strong>${fmtDate(p.desde)} → ${fmtDate(p.hasta)}</strong>
+        <span><span class="badge ${estBadge(p.estado)}">${esc(p.estado)}</span></span>
+      </div>
+      <button class="icon-btn del" onclick="removeProrroga(${i})" title="Quitar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('');
+}
+function addProrroga() {
+  const desde = document.getElementById('pr_desde').value;
+  const hasta = document.getElementById('pr_hasta').value;
+  const estado = document.getElementById('pr_estado').value;
+  if (!desde || !hasta) { showToast('Completá las fechas de la prórroga', 'error'); return; }
+  tmpProrrogas.push({ desde, hasta, estado });
+  document.getElementById('pr_desde').value='';
+  document.getElementById('pr_hasta').value='';
+  renderProrrogas();
+}
+function removeProrroga(i) { tmpProrrogas.splice(i, 1); renderProrrogas(); }
+
+// ESTUDIOS
+function renderEstudios() {
+  const el = document.getElementById('listEstudios');
+  if (!tmpEstudios.length) { el.innerHTML = '<div class="list-acum-empty">Sin estudios registrados</div>'; return; }
+  const estBadge = e => ({ 'Autorizado':'badge-green','Pendiente':'badge-orange','Rechazado':'badge-red' }[e]||'badge-gray');
+  el.innerHTML = tmpEstudios.map((e, i) => `
+    <div class="list-acum-item">
+      <div class="item-info">
+        <strong>${esc(e.nombre)}</strong>
+        <span><span class="badge ${estBadge(e.estado)}">${esc(e.estado)}</span></span>
+      </div>
+      <button class="icon-btn del" onclick="removeEstudio(${i})" title="Quitar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('');
+}
+function addEstudio() {
+  const nombre = document.getElementById('est_nombre').value.trim();
+  const estado = document.getElementById('est_estado').value;
+  if (!nombre) { showToast('Ingresá el nombre del estudio', 'error'); return; }
+  tmpEstudios.push({ nombre, estado });
+  document.getElementById('est_nombre').value='';
+  renderEstudios();
+}
+function removeEstudio(i) { tmpEstudios.splice(i, 1); renderEstudios(); }
+
+// ── FASE 3: CARGA ──────────────────────────────────────
+async function loadIntDom() {
+  try {
+    const res = await gasCall({ action: 'getInternacionDom' });
+    internacionesDom = res.data || [];
+    renderIntDom();
+  } catch { showToast('Error al cargar internaciones domiciliarias', 'error'); }
+}
+async function loadInsumos() {
+  try {
+    const res = await gasCall({ action: 'getInsumos' });
+    insumosAmbulatorios = res.data || [];
+    renderInsumos();
+  } catch { showToast('Error al cargar insumos ambulatorios', 'error'); }
+}
+
+function populateConfigSelects() {
+  const setOpts = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const opts = (arr, first) => `<option value="">${first}</option>` + arr.map(s => `<option>${esc(s)}</option>`).join('');
+
+  setOpts('ins_insumo', opts(cfgInsumosAmb, '— Seleccionar —'));
+  setOpts('filterInsumoTipo', opts(cfgInsumosAmb, 'Todos los insumos'));
+  setOpts('rei_motivo', opts(cfgMotivosReintegro, '— Seleccionar —'));
+  setOpts('filterReintegroMotivo', opts(cfgMotivosReintegro, 'Todos los motivos'));
+  setOpts('int_materialSelect', opts(cfgMaterialesCirugia, '— Elegir de la lista —'));
+  setOpts('int_clinica', opts(cfgClinicas, '— Seleccionar —'));
+  setOpts('int_tipoServicio', opts(cfgTiposServicio, '— Seleccionar —'));
+}
+
+function addMaterialCirugia() {
+  const sel = document.getElementById('int_materialSelect');
+  const val = sel.value;
+  if (!val) return;
+  const ta = document.getElementById('int_cirugiaMateriales');
+  const actual = ta.value.trim();
+  // Evitar duplicados
+  const lineas = actual ? actual.split('\n').map(l => l.trim()) : [];
+  if (lineas.includes(val)) { showToast('Ese material ya está en la lista', 'error'); return; }
+  ta.value = actual ? actual + '\n' + val : val;
+  sel.value = '';
+}
+
+// ── INTERNACIÓN DOMICILIARIA ────────────────────────────
+function planillaAlerta(fecha) {
+  if (!fecha) return null;
+  const ultima = new Date(fecha);
+  const hoy = new Date();
+  const renovacion = new Date(ultima);
+  renovacion.setMonth(renovacion.getMonth() + 6);
+  const diffDias = Math.round((renovacion - hoy) / 86400000);
+  if (diffDias < 0) return { tipo: 'venc', msg: `⚠ Planilla vencida hace ${Math.abs(diffDias)} días (venció ${fmtDate(toISODate(fecha))})` };
+  if (diffDias <= 30) return { tipo: 'warn', msg: `⏰ Próxima renovación en ${diffDias} días (${fmtDate(renovacion.toISOString().slice(0,10))})` };
+  return { tipo: 'ok', msg: `✓ Planilla vigente. Próxima renovación: ${fmtDate(renovacion.toISOString().slice(0,10))}` };
+}
+
+function renderIntDom(data) {
+  const list = data || internacionesDom;
+  const tbody = document.getElementById('bodyIntDom');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="table-empty">Sin internaciones domiciliarias registradas</div></td></tr>'; return; }
+  const estBadge = e => ({ 'Activo':'badge-green','Alta':'badge-blue','Suspendido':'badge-gray','Fallecido':'badge-gray' }[e]||'badge-gray');
+  tbody.innerHTML = list.map(r => {
+    const al = planillaAlerta(r.planillaFecha);
+    const alertaHtml = al ? `<span class="badge ${al.tipo==='ok'?'badge-green':al.tipo==='warn'?'badge-orange':'badge-red'}">${al.tipo==='ok'?'OK':al.tipo==='warn'?'Pronto':'Vencida'}</span>` : '—';
+    const prest = safeParse(r.prestaciones, []);
+    const prestHtml = prest.length
+      ? `<span class="badge badge-blue">${prest.length}</span> <span class="td-sub">${prest.slice(0,2).map(p=>esc(p.item)).join(', ')}${prest.length>2?'…':''}</span>`
+      : '—';
+    return `<tr>
+      <td><strong class="link-nombre" onclick="verFichaIntDom('${r.id}')">${esc(r.afiliadoNombre)}</strong></td>
+      <td class="td-sub">${esc(r.afiliadoDni)}</td>
+      <td>${prestHtml}</td>
+      <td>${r.estado ? `<span class="badge ${estBadge(r.estado)}">${esc(r.estado)}</span>` : '—'}</td>
+      <td class="td-sub">${r.planillaFecha ? fmtDate(r.planillaFecha) : '—'}</td>
+      <td>${alertaHtml}</td>
+      <td><div class="actions-cell">
+        <button class="icon-btn edit" onclick="editIntDom('${r.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="icon-btn del" onclick="deleteIntDom('${r.id}','${esc(r.afiliadoNombre)}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterIntDom() {
+  const q = document.getElementById('searchIntDom').value.toLowerCase();
+  const est = document.getElementById('filterIntDomEstado').value;
+  let list = internacionesDom;
+  if (q) list = list.filter(r => (r.afiliadoNombre||'').toLowerCase().includes(q)||(r.afiliadoDni||'').toLowerCase().includes(q));
+  if (est) list = list.filter(r => r.estado === est);
+  renderIntDom(list);
+}
+
+function openIntDomModal(id) {
+  editingIntDomId = id || null;
+  tmpPrestaciones = [];
+  document.getElementById('modalIntDomTitle').textContent = id ? 'Editar internación domiciliaria' : 'Nueva internación domiciliaria';
+  resetAfilCard('idom');
+  ['idom_dniSearch','idom_nombreSearch','idom_planillaFecha','idom_obs'].forEach(f => document.getElementById(f).value='');
+  document.getElementById('idom_estado').value='';
+  document.getElementById('idom_planillaOk').checked=false;
+  document.getElementById('idom_planillaAlerta').style.display='none';
+  document.getElementById('prest_categoria').value='';
+  document.getElementById('prest_item').innerHTML='<option value="">— Elegir —</option>';
+  document.getElementById('prest_cantidad').value='';
+  renderCotizacion('idom', '', []);
+
+  if (id) {
+    const r = internacionesDom.find(x => x.id === id);
+    if (r) {
+      setAfilCardGeneric('idom', r.afiliadoId, r.afiliadoNombre, r.afiliadoDni);
+      document.getElementById('idom_dniSearch').value = r.afiliadoDni||'';
+      document.getElementById('idom_nombreSearch').value = r.afiliadoNombre||'';
+      document.getElementById('idom_estado').value = r.estado||'';
+      document.getElementById('idom_planillaFecha').value = toISODate(r.planillaFecha);
+      document.getElementById('idom_planillaOk').checked = r.planillaOk === 'true' || r.planillaOk === true;
+      document.getElementById('idom_obs').value = r.obs||'';
+      tmpPrestaciones = safeParse(r.prestaciones, []);
+      if (r.planillaFecha) checkPlanilla('idom');
+      renderCotizacion('idom', '', safeParse(r.cotizaciones, []));
+    }
+  }
+  renderPrestaciones();
+  openModal('modalIntDom');
+}
+function editIntDom(id) { openIntDomModal(id); }
+
+async function saveIntDom() {
+  const afiliadoId = document.getElementById('idom_afiliadoId').value;
+  if (!afiliadoId) { showToast('Seleccioná un afiliado', 'error'); return; }
+  const btn = document.getElementById('btnSaveIntDom');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    await gasCall({ action:'saveInternacionDom', data:{
+      id: editingIntDomId||'',
+      afiliadoId,
+      afiliadoDni: document.getElementById('idom_afiliadoDni').value,
+      afiliadoNombre: document.getElementById('idom_afiliadoNombre').value,
+      estado: document.getElementById('idom_estado').value,
+      planillaFecha: document.getElementById('idom_planillaFecha').value,
+      planillaOk: document.getElementById('idom_planillaOk').checked,
+      obs: document.getElementById('idom_obs').value.trim(),
+      prestaciones: JSON.stringify(tmpPrestaciones),
+      cotizaciones: JSON.stringify(getCotizaciones('idom')),
+    }});
+    closeModal('modalIntDom');
+    showToast(editingIntDomId ? 'Actualizado' : 'Creado', 'success');
+    await loadIntDom();
+  } catch { showToast('Error al guardar', 'error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar'; }
+}
+
+async function deleteIntDom(id, nombre) {
+  if (!confirm(`¿Eliminar la internación domiciliaria de "${nombre}"?`)) return;
+  try { await gasCall({ action:'deleteInternacionDom', id }); showToast('Eliminado','success'); await loadIntDom(); }
+  catch { showToast('Error al eliminar','error'); }
+}
+
+// ── PRESTACIONES POR CATEGORÍA ──────────────────────────
+const PREST_CATEGORIAS = {
+  rrhh:         { label:'RRHH',          lista: () => cfgPrestRRHH },
+  equipamiento: { label:'Equipamiento',  lista: () => cfgPrestEquipamiento },
+  medicacion:   { label:'Medicación',    lista: () => cfgPrestMedicacion },
+  insumos:      { label:'Insumos',       lista: () => cfgPrestInsumos },
+  alimentacion: { label:'Alimentación',  lista: () => cfgPrestAlimentacion },
+};
+
+function onPrestCategoriaChange() {
+  const cat = document.getElementById('prest_categoria').value;
+  const sel = document.getElementById('prest_item');
+  if (!cat || !PREST_CATEGORIAS[cat]) { sel.innerHTML = '<option value="">— Elegir —</option>'; return; }
+  sel.innerHTML = '<option value="">— Elegir —</option>' + PREST_CATEGORIAS[cat].lista().map(s => `<option>${esc(s)}</option>`).join('');
+}
+
+function addPrestacion() {
+  const cat = document.getElementById('prest_categoria').value;
+  const item = document.getElementById('prest_item').value;
+  const cantidad = document.getElementById('prest_cantidad').value.trim();
+  if (!cat) { showToast('Elegí una categoría', 'error'); return; }
+  if (!item) { showToast('Elegí un ítem', 'error'); return; }
+  tmpPrestaciones.push({ categoria: cat, categoriaLabel: PREST_CATEGORIAS[cat].label, item, cantidad });
+  document.getElementById('prest_item').value='';
+  document.getElementById('prest_cantidad').value='';
+  renderPrestaciones();
+}
+
+function removePrestacion(i) { tmpPrestaciones.splice(i, 1); renderPrestaciones(); }
+
+function renderPrestaciones() {
+  const el = document.getElementById('listPrestaciones');
+  if (!el) return;
+  if (!tmpPrestaciones.length) { el.innerHTML = '<div class="list-acum-empty">Sin prestaciones autorizadas todavía</div>'; return; }
+  const catBadge = { 'RRHH':'badge-blue','Equipamiento':'badge-orange','Medicación':'badge-red','Insumos':'badge-green','Alimentación':'badge-gray' };
+  el.innerHTML = tmpPrestaciones.map((p, i) => `
+    <div class="list-acum-item">
+      <div class="item-info">
+        <strong>${esc(p.item)}</strong>
+        <span>
+          <span class="badge ${catBadge[p.categoriaLabel]||'badge-gray'}">${esc(p.categoriaLabel)}</span>
+          ${p.cantidad ? ` · Cantidad/frecuencia: <strong style="color:var(--text)">${esc(p.cantidad)}</strong>` : ''}
+        </span>
+      </div>
+      <button class="icon-btn del" onclick="removePrestacion(${i})" title="Quitar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('');
+}
+
+function checkPlanilla(prefix) {
+  const fecha = document.getElementById(`${prefix}_planillaFecha`).value;
+  const el = document.getElementById(`${prefix}_planillaAlerta`);
+  if (!fecha) { el.style.display='none'; return; }
+  const al = planillaAlerta(fecha);
+  if (!al) { el.style.display='none'; return; }
+  el.className = `alerta-planilla ${al.tipo}`;
+  el.textContent = al.msg;
+  el.style.display='flex';
+}
+
+// ── INSUMOS AMBULATORIOS ────────────────────────────────
+function renderInsumos(data) {
+  const list = data || insumosAmbulatorios;
+  const tbody = document.getElementById('bodyInsumos');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="table-empty">Sin insumos ambulatorios registrados</div></td></tr>'; return; }
+  tbody.innerHTML = list.map(r => {
+    const cotiz = safeParse(r.cotizaciones, []);
+    const elegidos = cotiz.filter(c => c.elegido);
+    const cotizCount = cotiz.filter(c => c.cotizo).length;
+    const elegidosTxt = elegidos.length ? elegidos.map(e => esc(e.nombre)).join(', ') : '—';
+    const montosTxt = elegidos.length ? elegidos.map(e => e.monto ? '$'+esc(e.monto) : '—').join(', ') : '—';
+    return `<tr>
+      <td><strong class="link-nombre" onclick="verFichaInsumo('${r.id}')">${esc(r.afiliadoNombre)}</strong></td>
+      <td class="td-sub">${esc(r.afiliadoDni)}</td>
+      <td>${esc(r.insumo)||'—'}</td>
+      <td><span class="badge badge-blue">${cotizCount} proveedor${cotizCount!==1?'es':''}</span></td>
+      <td class="td-sub">${elegidosTxt}</td>
+      <td class="td-sub">${montosTxt}</td>
+      <td><div class="actions-cell">
+        <button class="icon-btn edit" onclick="editInsumo('${r.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="icon-btn del" onclick="deleteInsumo('${r.id}','${esc(r.afiliadoNombre)}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterInsumos() {
+  const q = document.getElementById('searchInsumos').value.toLowerCase();
+  const tipo = document.getElementById('filterInsumoTipo').value;
+  let list = insumosAmbulatorios;
+  if (q) list = list.filter(r => (r.afiliadoNombre||'').toLowerCase().includes(q)||(r.afiliadoDni||'').toLowerCase().includes(q));
+  if (tipo) list = list.filter(r => r.insumo === tipo);
+  renderInsumos(list);
+}
+
+function openInsumoModal(id) {
+  editingInsumoId = id || null;
+  document.getElementById('modalInsumoTitle').textContent = id ? 'Editar insumo ambulatorio' : 'Nuevo insumo ambulatorio';
+  resetAfilCard('ins');
+  ['ins_dniSearch','ins_nombreSearch','ins_obs'].forEach(f => document.getElementById(f).value='');
+  document.getElementById('ins_insumo').value='';
+  document.getElementById('ins_cotizWrap').innerHTML='<div class="cotiz-empty">Seleccioná un insumo para ver los proveedores disponibles</div>';
+
+  if (id) {
+    const r = insumosAmbulatorios.find(x => x.id === id);
+    if (r) {
+      setAfilCardGeneric('ins', r.afiliadoId, r.afiliadoNombre, r.afiliadoDni);
+      document.getElementById('ins_dniSearch').value = r.afiliadoDni||'';
+      document.getElementById('ins_nombreSearch').value = r.afiliadoNombre||'';
+      document.getElementById('ins_insumo').value = r.insumo||'';
+      document.getElementById('ins_obs').value = r.obs||'';
+      if (r.insumo) renderCotizacion('ins', r.insumo, safeParse(r.cotizaciones, []));
+    }
+  }
+  openModal('modalInsumo');
+}
+function editInsumo(id) { openInsumoModal(id); }
+
+async function saveInsumo() {
+  const afiliadoId = document.getElementById('ins_afiliadoId').value;
+  const insumo = document.getElementById('ins_insumo').value;
+  if (!afiliadoId) { showToast('Seleccioná un afiliado', 'error'); return; }
+  if (!insumo) { showToast('Seleccioná un insumo', 'error'); return; }
+  const btn = document.getElementById('btnSaveInsumo');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    await gasCall({ action:'saveInsumo', data:{
+      id: editingInsumoId||'',
+      afiliadoId,
+      afiliadoDni: document.getElementById('ins_afiliadoDni').value,
+      afiliadoNombre: document.getElementById('ins_afiliadoNombre').value,
+      insumo,
+      obs: document.getElementById('ins_obs').value.trim(),
+      cotizaciones: JSON.stringify(getCotizaciones('ins')),
+    }});
+    closeModal('modalInsumo');
+    showToast(editingInsumoId ? 'Actualizado' : 'Creado', 'success');
+    await loadInsumos();
+  } catch { showToast('Error al guardar', 'error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar'; }
+}
+
+async function deleteInsumo(id, nombre) {
+  if (!confirm(`¿Eliminar el insumo de "${nombre}"?`)) return;
+  try { await gasCall({ action:'deleteInsumo', id }); showToast('Eliminado','success'); await loadInsumos(); }
+  catch { showToast('Error al eliminar','error'); }
+}
+
+// ── COTIZACIÓN ──────────────────────────────────────────
+function onInsumoChange(prefix) {
+  const insumo = document.getElementById(`${prefix}_insumo`).value;
+  if (!insumo) {
+    document.getElementById(`${prefix}_cotizWrap`).innerHTML = '<div class="cotiz-empty">Seleccioná un insumo para ver los proveedores disponibles</div>';
+    return;
+  }
+  renderCotizacion(prefix, insumo, []);
+}
+
+function renderCotizacion(prefix, insumo, savedCotiz) {
+  const wrap = document.getElementById(`${prefix}_cotizWrap`);
+  if (!proveedores.length) { wrap.innerHTML = '<div class="cotiz-empty">No hay proveedores cargados en el sistema</div>'; return; }
+  wrap.innerHTML = `<div class="cotiz-grid">${proveedores.map(p => {
+    const saved = savedCotiz.find(c => c.id === p.id) || {};
+    return `<div class="cotiz-item">
+      <label>
+        <input type="checkbox" id="cotiz_${prefix}_chk_${p.id}" ${saved.cotizo ? 'checked' : ''} onchange="onCotizCheck('${prefix}','${p.id}')">
+        <span><strong>${esc(p.empresa)}</strong><br><span style="font-size:11px;color:var(--text3)">${esc(p.tipoEntrega)||''}</span></span>
+      </label>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:12px;color:var(--text3)">$</span>
+        <input class="cotiz-monto" type="number" min="0" step="0.01" id="cotiz_${prefix}_monto_${p.id}" placeholder="0.00" value="${saved.monto||''}">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--accent2);cursor:pointer;white-space:nowrap">
+          <input type="checkbox" id="cotiz_${prefix}_eleg_${p.id}" ${saved.elegido ? 'checked' : ''} onchange="onElegidoCheck('${prefix}','${p.id}')" style="accent-color:var(--accent2)"> Elegido
+        </label>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function onCotizCheck(prefix, pid) {
+  const chk = document.getElementById(`cotiz_${prefix}_chk_${pid}`);
+  const monto = document.getElementById(`cotiz_${prefix}_monto_${pid}`);
+  const eleg = document.getElementById(`cotiz_${prefix}_eleg_${pid}`);
+  if (!chk.checked) { monto.value = ''; if (eleg) eleg.checked = false; }
+}
+
+// Al marcar "Elegido", tiene que haber cotizado → auto-marca cotizó
+function onElegidoCheck(prefix, pid) {
+  const eleg = document.getElementById(`cotiz_${prefix}_eleg_${pid}`);
+  const chk = document.getElementById(`cotiz_${prefix}_chk_${pid}`);
+  if (eleg.checked && chk && !chk.checked) chk.checked = true;
+}
+
+function getCotizaciones(prefix) {
+  const cotiz = proveedores.map(p => {
+    const chk = document.getElementById(`cotiz_${prefix}_chk_${p.id}`);
+    const monto = document.getElementById(`cotiz_${prefix}_monto_${p.id}`);
+    const radio = document.getElementById(`cotiz_${prefix}_eleg_${p.id}`);
+    if (!chk) return null;
+    return { id: p.id, nombre: p.empresa, cotizo: chk.checked, monto: monto ? monto.value : '', elegido: radio ? radio.checked : false };
+  }).filter(Boolean);
+
+  // Los que efectivamente cotizaron
+  const cotizaron = cotiz.filter(c => c.cotizo);
+  const hayElegido = cotizaron.some(c => c.elegido);
+  // Si nadie fue marcado como elegido pero hay cotizaciones, elegir automáticamente
+  // el de menor monto (o el único). Así no queda "sin proveedor elegido" por olvido.
+  if (cotizaron.length && !hayElegido) {
+    let mejor = null;
+    cotizaron.forEach(c => {
+      const m = parseFloat(c.monto);
+      if (!isNaN(m) && (mejor === null || m < parseFloat(mejor.monto))) mejor = c;
+    });
+    if (!mejor) mejor = cotizaron[0]; // si ninguno tiene monto, el primero
+    cotiz.forEach(c => { if (c.id === mejor.id) c.elegido = true; });
+  }
+  return cotiz;
+}
+
+// ── AUTOCOMPLETE GENÉRICO ───────────────────────────────
+function acAfiliado(inputId, listId, prefix, mode) {
+  const q = document.getElementById(inputId).value.trim().toLowerCase();
+  const list = document.getElementById(listId);
+  if (!q) { list.classList.remove('show'); return; }
+  const matches = afiliados.filter(a => mode === 'dni'
+    ? (a.dni||'').toLowerCase().includes(q)
+    : (a.nombre||'').toLowerCase().includes(q)
+  ).slice(0, 8);
+  if (!matches.length) { list.classList.remove('show'); return; }
+  list.innerHTML = matches.map(a =>
+    `<div class="autocomplete-item" onclick="selectAfiliadoGeneric('${prefix}','${a.id}')">
+      <div>${esc(a.nombre)}</div>
+      <div class="sub">DNI: ${esc(a.dni)} · ${esc(a.seccional)||'Sin seccional'}</div>
+    </div>`
+  ).join('');
+  list.classList.add('show');
+}
+
+function selectAfiliadoGeneric(prefix, id) {
+  const a = afiliados.find(x => x.id === id);
+  if (!a) return;
+  setAfilCardGeneric(prefix, a.id, a.nombre, a.dni);
+  document.getElementById(`${prefix}_dniSearch`).value = a.dni;
+  document.getElementById(`${prefix}_nombreSearch`).value = a.nombre;
+  document.querySelectorAll(`#${prefix}_acList, #${prefix}_acListNombre`).forEach(l => l.classList.remove('show'));
+}
+
+function setAfilCardGeneric(prefix, id, nombre, dni) {
+  document.getElementById(`${prefix}_afiliadoId`).value = id||'';
+  document.getElementById(`${prefix}_afiliadoDni`).value = dni||'';
+  document.getElementById(`${prefix}_afiliadoNombre`).value = nombre||'';
+  document.getElementById(`${prefix}_cardNombre`).textContent = nombre||'—';
+  const a = afiliados.find(x => x.id === id);
+  document.getElementById(`${prefix}_cardDetalle`).textContent = a
+    ? `DNI: ${a.dni} · Seccional: ${a.seccional||'—'} · ${a.tipoServicio||'—'}`
+    : `DNI: ${dni||'—'}`;
+  document.getElementById(`${prefix}_cardWrap`).classList.add('show');
+}
+
+function resetAfilCard(prefix) {
+  document.getElementById(`${prefix}_afiliadoId`).value='';
+  document.getElementById(`${prefix}_afiliadoDni`).value='';
+  document.getElementById(`${prefix}_afiliadoNombre`).value='';
+  document.getElementById(`${prefix}_cardWrap`).classList.remove('show');
+}
+
+// GAS CALL — GET para payloads chicos, POST para grandes
+// (las URLs muy largas son rechazadas por Google, por eso los
+// guardados con muchas listas viajan en el cuerpo del request)
+function gasCall(params) {
+  const json = JSON.stringify(params);
+  const url = getGasUrl();
+  const req = json.length > 1800
+    ? fetch(url, { method: 'POST', body: json }) // sin headers custom → sin preflight CORS
+    : fetch(url + '?payload=' + encodeURIComponent(json));
+  return req.then(r => r.json()).then(d => { if (d.error) throw new Error(d.error); return d; });
+}
+
+// CONFIGURACIÓN
+// ── CONFIGURACIÓN FASE 5 ────────────────────────────────
+
+const CFG_MAP = {
+  motivosReintegro:    () => cfgMotivosReintegro,
+  insumosAmb:          () => cfgInsumosAmb,
+  materialesCirugia:   () => cfgMaterialesCirugia,
+  prestRRHH:           () => cfgPrestRRHH,
+  prestEquipamiento:   () => cfgPrestEquipamiento,
+  prestMedicacion:     () => cfgPrestMedicacion,
+  prestInsumos:        () => cfgPrestInsumos,
+  prestAlimentacion:   () => cfgPrestAlimentacion,
+  tiposServicio:       () => cfgTiposServicio,
+  clinicas:            () => cfgClinicas,
+};
+const CFG_SET = {
+  motivosReintegro:    v => { cfgMotivosReintegro = v; },
+  insumosAmb:          v => { cfgInsumosAmb = v; },
+  materialesCirugia:   v => { cfgMaterialesCirugia = v; },
+  prestRRHH:           v => { cfgPrestRRHH = v; },
+  prestEquipamiento:   v => { cfgPrestEquipamiento = v; },
+  prestMedicacion:     v => { cfgPrestMedicacion = v; },
+  prestInsumos:        v => { cfgPrestInsumos = v; },
+  prestAlimentacion:   v => { cfgPrestAlimentacion = v; },
+  tiposServicio:       v => { cfgTiposServicio = v; },
+  clinicas:            v => { cfgClinicas = v; },
+};
+
+function cfgRenderList(key, list) {
+  const el = document.getElementById('cfgList_' + key);
+  if (!el) return;
+  if (!list.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0">Sin items</div>'; return; }
+  el.innerHTML = list.map((item, i) => `
+    <div class="cfg-list-item">
+      <span>${esc(item)}</span>
+      <button class="icon-btn del" onclick="cfgRemoveItem('${key}',${i})" title="Eliminar" style="width:24px;height:24px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function cfgAddItem(key) {
+  const input = document.getElementById('cfgInput_' + key);
+  const val = input.value.trim();
+  if (!val) return;
+  const list = CFG_MAP[key]().slice();
+  if (list.includes(val)) { showToast('Ya existe ese item', 'error'); return; }
+  list.push(val);
+  CFG_SET[key](list);
+  cfgRenderList(key, list);
+  populateConfigSelects(); // refresca los desplegables al instante
+  input.value = '';
+  input.focus();
+}
+
+function cfgRemoveItem(key, index) {
+  const list = CFG_MAP[key]().slice();
+  list.splice(index, 1);
+  CFG_SET[key](list);
+  cfgRenderList(key, list);
+  populateConfigSelects(); // refresca los desplegables al instante
+}
+
+function toggleCfgPass() {
+  const inp = document.getElementById('cfg_pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function saveAllConfig() {
+  const statusGuard = document.getElementById('cfg_saveStatus');
+  if (!_configCargadaOk) {
+    statusGuard.style.display = 'block';
+    statusGuard.style.background = 'var(--danger-soft)';
+    statusGuard.style.border = '1px solid var(--danger)';
+    statusGuard.style.color = 'var(--danger)';
+    statusGuard.textContent = '✕ La configuración todavía no se cargó desde el Sheet. Guardar ahora borraría tus listas. Tocá Sincronizar arriba y volvé a intentar.';
+    showToast('Esperá a que cargue la configuración', 'error');
+    return;
+  }
+  const btn = document.getElementById('btnSaveConfig');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  const statusEl = document.getElementById('cfg_saveStatus');
+
+  const payload = {
+    insumosAmb:           cfgInsumosAmb,
+    motivosReintegro:     cfgMotivosReintegro,
+    materialesCirugia:    cfgMaterialesCirugia,
+    prestRRHH:            cfgPrestRRHH,
+    prestEquipamiento:    cfgPrestEquipamiento,
+    prestMedicacion:      cfgPrestMedicacion,
+    prestInsumos:         cfgPrestInsumos,
+    prestAlimentacion:    cfgPrestAlimentacion,
+    tiposServicio:        cfgTiposServicio,
+    clinicas:             cfgClinicas,
+    topeCeliaquía:        parseFloat(document.getElementById('cfg_topeCeliaquía').value) || cfgTopeCeliaquía,
+  };
+
+  // Contraseña opcional
+  const nuevaPass = document.getElementById('cfg_pass').value.trim();
+  if (nuevaPass) payload.password = nuevaPass;
+
+  try {
+    await gasCall({ action: 'saveConfig', data: payload });
+
+    // Actualizar state local
+    cfgTopeCeliaquía = payload.topeCeliaquía;
+    populateConfigSelects();
+
+    statusEl.style.display = 'block';
+    statusEl.style.background = 'rgba(56,217,169,0.1)';
+    statusEl.style.border = '1px solid var(--accent2)';
+    statusEl.style.color = 'var(--accent2)';
+    statusEl.textContent = '✓ Configuración guardada correctamente.';
+    showToast('Configuración guardada', 'success');
+    document.getElementById('cfg_pass').value = '';
+  } catch (err) {
+    statusEl.style.display = 'block';
+    statusEl.style.background = 'var(--danger-soft)';
+    statusEl.style.border = '1px solid var(--danger)';
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = '✕ Error del servidor: ' + (err.message || 'sin detalle') + ' — Si dice "Acción no reconocida", el GAS desplegado es una versión vieja: hay que pegar el código nuevo y hacer Nueva implementación.';
+    showToast('Error al guardar configuración', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar configuración';
+  }
+}
+
+// ── REINTEGROS ──────────────────────────────────────────
+async function loadReintegros() {
+  try {
+    const res = await gasCall({ action: 'getReintegros' });
+    reintegros = res.data || [];
+    renderReintegros();
+  } catch { showToast('Error al cargar reintegros', 'error'); }
+}
+
+function reintegroEstadoBadge(e) {
+  const map = { 'Pendiente':'badge-orange','Aprobado':'badge-green','Rechazado':'badge-red','Pagado':'badge-blue' };
+  return `<span class="badge ${map[e]||'badge-gray'}">${e||'—'}</span>`;
+}
+
+function renderReintegros(data) {
+  const list = data || reintegros;
+  const tbody = document.getElementById('bodyReintegros');
+  if (!tbody) return;
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="table-empty">Sin reintegros registrados</div></td></tr>'; return; }
+  tbody.innerHTML = list.map(r => `<tr>
+    <td><strong class="link-nombre" onclick="verFichaReintegro('${r.id}')">${esc(r.afiliadoNombre)}</strong></td>
+    <td class="td-sub">${esc(r.afiliadoDni)}</td>
+    <td>${esc(r.motivo)||'—'}</td>
+    <td>${r.montoSolicitado ? '$'+parseFloat(r.montoSolicitado).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—'}</td>
+    <td>${r.montoAprobado ? '$'+parseFloat(r.montoAprobado).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—'}</td>
+    <td>${reintegroEstadoBadge(r.estado)}</td>
+    <td><div class="actions-cell">
+      <button class="icon-btn edit" onclick="editReintegro('${r.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="icon-btn del" onclick="deleteReintegro('${r.id}','${esc(r.afiliadoNombre)}')" title="Eliminar"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function filterReintegros() {
+  const q = document.getElementById('searchReintegros').value.toLowerCase();
+  const est = document.getElementById('filterReintegroEstado').value;
+  const mot = document.getElementById('filterReintegroMotivo').value;
+  let list = reintegros;
+  if (q) list = list.filter(r => (r.afiliadoNombre||'').toLowerCase().includes(q)||(r.afiliadoDni||'').toLowerCase().includes(q));
+  if (est) list = list.filter(r => r.estado === est);
+  if (mot) list = list.filter(r => r.motivo === mot);
+  renderReintegros(list);
+}
+
+function openReintegroModal(id) {
+  editingReintegroId = id || null;
+  document.getElementById('modalReintegroTitle').textContent = id ? 'Editar reintegro' : 'Nuevo reintegro';
+  resetAfilCard('rei');
+  ['rei_dniSearch','rei_nombreSearch','rei_montoSolicitado','rei_montoAprobado','rei_obs'].forEach(f => document.getElementById(f).value='');
+  document.getElementById('rei_motivo').value='';
+  document.getElementById('rei_estado').value='Pendiente';
+  document.getElementById('rei_topeInfo').style.display='none';
+  document.getElementById('rei_montoAprobado').readOnly = false;
+  document.getElementById('rei_montoAprobado').style.opacity = '1';
+  document.getElementById('rei_montoAprobadoLabel').textContent = 'Monto aprobado';
+
+  if (id) {
+    const r = reintegros.find(x => x.id === id);
+    if (r) {
+      setAfilCardGeneric('rei', r.afiliadoId, r.afiliadoNombre, r.afiliadoDni);
+      document.getElementById('rei_dniSearch').value = r.afiliadoDni||'';
+      document.getElementById('rei_nombreSearch').value = r.afiliadoNombre||'';
+      document.getElementById('rei_motivo').value = r.motivo||'';
+      document.getElementById('rei_estado').value = r.estado||'Pendiente';
+      document.getElementById('rei_montoSolicitado').value = r.montoSolicitado||'';
+      document.getElementById('rei_montoAprobado').value = r.montoAprobado||'';
+      document.getElementById('rei_obs').value = r.obs||'';
+      onMotivoChange();
+    }
+  }
+  openModal('modalReintegro');
+}
+function editReintegro(id) { openReintegroModal(id); }
+
+function onMotivoChange() {
+  const motivo = document.getElementById('rei_motivo').value;
+  const esCeliaquía = motivo === 'Celiaquía';
+  const infoEl = document.getElementById('rei_topeInfo');
+  const aprobadoInput = document.getElementById('rei_montoAprobado');
+  const aprobadoLabel = document.getElementById('rei_montoAprobadoLabel');
+
+  if (esCeliaquía) {
+    aprobadoInput.readOnly = true;
+    aprobadoInput.style.opacity = '0.6';
+    aprobadoLabel.textContent = `Monto aprobado (auto — tope $${cfgTopeCeliaquía.toLocaleString('es-AR')})`;
+    infoEl.style.display = 'block';
+    infoEl.textContent = `ℹ Celiaquía: el monto aprobado se calcula automáticamente según el tope configurado ($${cfgTopeCeliaquía.toLocaleString('es-AR')}).`;
+    onMontoChange();
+  } else {
+    aprobadoInput.readOnly = false;
+    aprobadoInput.style.opacity = '1';
+    aprobadoLabel.textContent = 'Monto aprobado';
+    infoEl.style.display = 'none';
+  }
+}
+
+function onMontoChange() {
+  const motivo = document.getElementById('rei_motivo').value;
+  if (motivo !== 'Celiaquía') return;
+  const solicitado = parseFloat(document.getElementById('rei_montoSolicitado').value) || 0;
+  const aprobado = solicitado > cfgTopeCeliaquía ? cfgTopeCeliaquía : solicitado;
+  document.getElementById('rei_montoAprobado').value = aprobado > 0 ? aprobado.toFixed(2) : '';
+}
+
+async function saveReintegro() {
+  const afiliadoId = document.getElementById('rei_afiliadoId').value;
+  const motivo = document.getElementById('rei_motivo').value;
+  const montoSolicitado = document.getElementById('rei_montoSolicitado').value;
+  if (!afiliadoId) { showToast('Seleccioná un afiliado', 'error'); return; }
+  if (!motivo) { showToast('Seleccioná un motivo', 'error'); return; }
+  if (!montoSolicitado) { showToast('Ingresá el monto solicitado', 'error'); return; }
+
+  const btn = document.getElementById('btnSaveReintegro');
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    await gasCall({ action:'saveReintegro', data:{
+      id: editingReintegroId||'',
+      afiliadoId,
+      afiliadoDni: document.getElementById('rei_afiliadoDni').value,
+      afiliadoNombre: document.getElementById('rei_afiliadoNombre').value,
+      motivo,
+      estado: document.getElementById('rei_estado').value||'Pendiente',
+      montoSolicitado,
+      montoAprobado: document.getElementById('rei_montoAprobado').value,
+      obs: document.getElementById('rei_obs').value.trim(),
+    }});
+    closeModal('modalReintegro');
+    showToast(editingReintegroId ? 'Reintegro actualizado' : 'Reintegro creado', 'success');
+    await loadReintegros();
+    updateDashboard();
+  } catch { showToast('Error al guardar reintegro', 'error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar'; }
+}
+
+async function deleteReintegro(id, nombre) {
+  if (!confirm(`¿Eliminar el reintegro de "${nombre}"?`)) return;
+  try { await gasCall({ action:'deleteReintegro', id }); showToast('Reintegro eliminado','success'); await loadReintegros(); updateDashboard(); }
+  catch { showToast('Error al eliminar','error'); }
+}
+
+// ── FICHA TÉCNICA (solo lectura + descarga CSV) ─────────
+let _fichaCSV = { filas: [], nombreArchivo: 'ficha.csv' };
+
+function diasEntre(desde, hasta) {
+  const d1 = new Date(toISODate(desde));
+  const d2 = hasta ? new Date(toISODate(hasta)) : new Date();
+  if (isNaN(d1.getTime())) return null;
+  return Math.max(0, Math.round((d2 - d1) / 86400000));
+}
+
+function fichaItem(lbl, val, span) {
+  return `<div class="ficha-item${span ? ' span-2' : ''}"><div class="lbl">${lbl}</div><div class="val">${val || '—'}</div></div>`;
+}
+
+// FICHA INTERNACIÓN
+function verFichaInternacion(id) {
+  const r = internaciones.find(x => x.id === id);
+  if (!r) return;
+  const prorrs = safeParse(r.prorrogas, []);
+  const estuds = safeParse(r.estudios, []);
+  const dias = diasEntre(r.fechaIngreso, r.estado === 'Internado' ? null : r.fechaAlta);
+  document.getElementById('modalFichaTitle').textContent = 'Ficha de internación';
+
+  let html = `
+    <div class="ficha-header">
+      <div class="ficha-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+      <div class="ficha-header-data">
+        <div class="nombre">${esc(r.afiliadoNombre)}</div>
+        <div class="sub">DNI ${esc(r.afiliadoDni)} · ${estadoBadge(r.estado)}${r.clinica ? ' · ' + esc(r.clinica) : ''}${r.tipoServicio ? ' · ' + esc(r.tipoServicio) : ''}</div>
+      </div>
+    </div>
+    <div class="ficha-grid">
+      ${fichaItem('Clínica / Institución', esc(r.clinica))}
+      ${fichaItem('Tipo de servicio', esc(r.tipoServicio))}
+      ${fichaItem('Piso / Sector', esc(r.piso))}
+      ${fichaItem('Cama / Habitación', esc(r.cama))}
+      ${fichaItem('Diagnóstico de ingreso', esc(r.diagnostico), true)}
+      ${fichaItem('Fecha de ingreso', fmtDate(r.fechaIngreso))}
+      ${fichaItem('Fecha de alta', r.fechaAlta ? fmtDate(r.fechaAlta) : '—')}
+      ${fichaItem('Días de internación', dias !== null ? dias + ' días' : '—')}
+      ${fichaItem('Estado', esc(r.estado))}
+      ${r.cirugiaTipo ? fichaItem('Cirugía', esc(r.cirugiaTipo), true) : ''}
+      ${r.cirugiaMateriales ? fichaItem('Materiales', esc(r.cirugiaMateriales).replace(/\n/g,', '), true) : ''}
+    </div>`;
+
+  html += `<div class="ficha-block"><div class="ficha-block-title">Prórrogas (${prorrs.length})</div><div class="ficha-list">`;
+  html += prorrs.length ? prorrs.map(p => `<div class="ficha-list-item"><strong>${fmtDate(p.desde)} → ${fmtDate(p.hasta)}</strong> · ${esc(p.estado)}</div>`).join('') : '<div class="ficha-empty">Sin prórrogas</div>';
+  html += `</div></div>`;
+
+  html += `<div class="ficha-block"><div class="ficha-block-title">Estudios solicitados (${estuds.length})</div><div class="ficha-list">`;
+  html += estuds.length ? estuds.map(e => `<div class="ficha-list-item"><strong>${esc(e.nombre)}</strong> · ${esc(e.estado)}</div>`).join('') : '<div class="ficha-empty">Sin estudios</div>';
+  html += `</div></div>`;
+
+  document.getElementById('fichaBody').innerHTML = html;
+
+  // CSV
+  const filas = [
+    ['FICHA DE INTERNACIÓN'],
+    ['Afiliado', r.afiliadoNombre],
+    ['DNI', r.afiliadoDni],
+    ['Clínica', r.clinica],
+    ['Tipo de servicio', r.tipoServicio || ''],
+    ['Piso / Sector', r.piso || ''],
+    ['Cama / Habitación', r.cama || ''],
+    ['Diagnóstico', r.diagnostico],
+    ['Fecha ingreso', fmtDate(r.fechaIngreso)],
+    ['Fecha alta', r.fechaAlta ? fmtDate(r.fechaAlta) : ''],
+    ['Días internación', dias !== null ? dias : ''],
+    ['Estado', r.estado],
+    ['Cirugía', r.cirugiaTipo || ''],
+    ['Materiales', (r.cirugiaMateriales || '').replace(/\n/g,'; ')],
+    [''],
+    ['PRÓRROGAS'],
+    ['Desde','Hasta','Estado'],
+    ...prorrs.map(p => [fmtDate(p.desde), fmtDate(p.hasta), p.estado]),
+    [''],
+    ['ESTUDIOS'],
+    ['Estudio','Estado'],
+    ...estuds.map(e => [e.nombre, e.estado]),
+  ];
+  _fichaCSV = { filas, nombreArchivo: `internacion_${sanitizar(r.afiliadoNombre)}.csv` };
+  openModal('modalFicha');
+}
+
+// FICHA INTERNACIÓN DOMICILIARIA
+function verFichaIntDom(id) {
+  const r = internacionesDom.find(x => x.id === id);
+  if (!r) return;
+  const prest = safeParse(r.prestaciones, []);
+  const al = planillaAlerta(r.planillaFecha);
+  document.getElementById('modalFichaTitle').textContent = 'Ficha de internación domiciliaria';
+
+  let html = `
+    <div class="ficha-header">
+      <div class="ficha-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div class="ficha-header-data">
+        <div class="nombre">${esc(r.afiliadoNombre)}</div>
+        <div class="sub">DNI ${esc(r.afiliadoDni)} · ${esc(r.estado||'—')}</div>
+      </div>
+    </div>
+    <div class="ficha-grid">
+      ${fichaItem('Estado', esc(r.estado))}
+      ${fichaItem('Última planilla', r.planillaFecha ? fmtDate(r.planillaFecha) : '—')}
+      ${al ? fichaItem('Estado planilla', al.msg, true) : ''}
+    </div>`;
+
+  // Prestaciones agrupadas por categoría
+  const cats = {};
+  prest.forEach(p => { const c = p.categoriaLabel || 'Otras'; (cats[c] = cats[c] || []).push(p); });
+  html += `<div class="ficha-block"><div class="ficha-block-title">Prestaciones autorizadas (${prest.length})</div>`;
+  if (!prest.length) html += '<div class="ficha-empty">Sin prestaciones</div>';
+  Object.entries(cats).forEach(([cat, items]) => {
+    html += `<div class="ficha-cat-group"><div class="ficha-cat-group-title">${esc(cat)}</div><div class="ficha-list">`;
+    html += items.map(p => `<div class="ficha-list-item"><strong>${esc(p.item)}</strong>${p.cantidad ? ' — ' + esc(p.cantidad) : ''}</div>`).join('');
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+  if (r.obs) html += `<div class="ficha-block"><div class="ficha-block-title">Observaciones</div><div class="val" style="font-size:13px">${esc(r.obs)}</div></div>`;
+
+  document.getElementById('fichaBody').innerHTML = html;
+
+  const filas = [
+    ['FICHA DE INTERNACIÓN DOMICILIARIA'],
+    ['Afiliado', r.afiliadoNombre],
+    ['DNI', r.afiliadoDni],
+    ['Estado', r.estado],
+    ['Última planilla', r.planillaFecha ? fmtDate(r.planillaFecha) : ''],
+    [''],
+    ['PRESTACIONES AUTORIZADAS'],
+    ['Categoría','Ítem','Cantidad / frecuencia'],
+    ...prest.map(p => [p.categoriaLabel || '', p.item || '', p.cantidad || '']),
+    [''],
+    ['Observaciones', r.obs || ''],
+  ];
+  _fichaCSV = { filas, nombreArchivo: `domiciliaria_${sanitizar(r.afiliadoNombre)}.csv` };
+  openModal('modalFicha');
+}
+
+// FICHA INSUMO AMBULATORIO
+function verFichaInsumo(id) {
+  const r = insumosAmbulatorios.find(x => x.id === id);
+  if (!r) return;
+  const cotiz = safeParse(r.cotizaciones, []);
+  const elegidos = cotiz.filter(c => c.elegido);
+  document.getElementById('modalFichaTitle').textContent = 'Ficha de insumo ambulatorio';
+
+  let html = `
+    <div class="ficha-header">
+      <div class="ficha-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10H3"/><path d="M21 6H3"/><path d="M21 14H3"/><path d="M21 18H3"/></svg></div>
+      <div class="ficha-header-data">
+        <div class="nombre">${esc(r.afiliadoNombre)}</div>
+        <div class="sub">DNI ${esc(r.afiliadoDni)}</div>
+      </div>
+    </div>
+    <div class="ficha-grid">
+      ${fichaItem('Insumo', esc(r.insumo))}
+      ${fichaItem('Proveedor(es) elegido(s)', elegidos.length ? elegidos.map(e => esc(e.nombre)).join(', ') : '—', true)}
+      ${r.obs ? fichaItem('Observaciones', esc(r.obs), true) : ''}
+    </div>`;
+
+  const cotizaron = cotiz.filter(c => c.cotizo);
+  html += `<div class="ficha-block"><div class="ficha-block-title">Cotizaciones (${cotizaron.length})</div><div class="ficha-list">`;
+  html += cotizaron.length ? cotizaron.map(c => `<div class="ficha-list-item" style="${c.elegido ? 'border-left:3px solid var(--accent2);background:rgba(56,217,169,0.06)' : ''}"><strong>${esc(c.nombre)}</strong> · $${esc(c.monto||'0')}${c.elegido ? ' · <span style="color:var(--accent2);font-weight:700">✔ Elegido</span>' : ''}</div>`).join('') : '<div class="ficha-empty">Sin cotizaciones</div>';
+  html += `</div></div>`;
+
+  document.getElementById('fichaBody').innerHTML = html;
+
+  const filas = [
+    ['FICHA DE INSUMO AMBULATORIO'],
+    ['Afiliado', r.afiliadoNombre],
+    ['DNI', r.afiliadoDni],
+    ['Insumo', r.insumo],
+    ['Observaciones', r.obs || ''],
+    [''],
+    ['COTIZACIONES'],
+    ['Proveedor','Monto','Elegido'],
+    ...cotizaron.map(c => [c.nombre, c.monto || '0', c.elegido ? 'SÍ' : '']),
+  ];
+  _fichaCSV = { filas, nombreArchivo: `insumo_${sanitizar(r.afiliadoNombre)}.csv` };
+  openModal('modalFicha');
+}
+
+// FICHA REINTEGRO
+function verFichaReintegro(id) {
+  const r = reintegros.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modalFichaTitle').textContent = 'Ficha de reintegro';
+
+  let html = `
+    <div class="ficha-header">
+      <div class="ficha-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="ficha-header-data">
+        <div class="nombre">${esc(r.afiliadoNombre)}</div>
+        <div class="sub">DNI ${esc(r.afiliadoDni)} · ${reintegroEstadoBadge(r.estado)}</div>
+      </div>
+    </div>
+    <div class="ficha-grid">
+      ${fichaItem('Motivo', esc(r.motivo))}
+      ${fichaItem('Estado', esc(r.estado))}
+      ${fichaItem('Monto solicitado', r.montoSolicitado ? '$'+parseFloat(r.montoSolicitado).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—')}
+      ${fichaItem('Monto aprobado', r.montoAprobado ? '$'+parseFloat(r.montoAprobado).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—')}
+      ${r.obs ? fichaItem('Observaciones', esc(r.obs), true) : ''}
+    </div>`;
+  document.getElementById('fichaBody').innerHTML = html;
+
+  const filas = [
+    ['FICHA DE REINTEGRO'],
+    ['Afiliado', r.afiliadoNombre],
+    ['DNI', r.afiliadoDni],
+    ['Motivo', r.motivo],
+    ['Estado', r.estado],
+    ['Monto solicitado', r.montoSolicitado || ''],
+    ['Monto aprobado', r.montoAprobado || ''],
+    ['Observaciones', r.obs || ''],
+  ];
+  _fichaCSV = { filas, nombreArchivo: `reintegro_${sanitizar(r.afiliadoNombre)}.csv` };
+  openModal('modalFicha');
+}
+
+// FICHA PROVEEDOR
+function verFichaProveedor(id) {
+  const p = proveedores.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalFichaTitle').textContent = 'Ficha de proveedor';
+  const estrellas = c => { const n = parseInt(c); return n ? '★'.repeat(n) + '☆'.repeat(5-n) + ` (${n}/5)` : '—'; };
+
+  let html = `
+    <div class="ficha-header">
+      <div class="ficha-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg></div>
+      <div class="ficha-header-data">
+        <div class="nombre">${esc(p.empresa)}</div>
+        <div class="sub">${esc(p.tipo)||'—'}${p.calificacion ? ' · ' + estrellas(p.calificacion) : ''}</div>
+      </div>
+    </div>
+    <div class="ficha-grid">
+      ${fichaItem('Contacto', esc(p.contacto))}
+      ${fichaItem('Teléfono / Mail', esc(p.contactoInfo))}
+      ${fichaItem('Rubro / Productos', esc(p.rubro), true)}
+      ${fichaItem('Tipo de proveedor', esc(p.tipo))}
+      ${fichaItem('Tipo de entrega', esc(p.tipoEntrega))}
+      ${fichaItem('Condición de pago', esc(p.condicionPago))}
+      ${fichaItem('Calificación', estrellas(p.calificacion))}
+      ${p.notas ? fichaItem('Notas', esc(p.notas), true) : ''}
+    </div>`;
+  document.getElementById('fichaBody').innerHTML = html;
+
+  const filas = [
+    ['FICHA DE PROVEEDOR'],
+    ['Empresa', p.empresa],
+    ['Contacto', p.contacto],
+    ['Teléfono / Mail', p.contactoInfo],
+    ['Rubro', p.rubro],
+    ['Tipo', p.tipo],
+    ['Tipo de entrega', p.tipoEntrega],
+    ['Condición de pago', p.condicionPago],
+    ['Calificación', p.calificacion ? p.calificacion + '/5' : ''],
+    ['Notas', p.notas],
+  ];
+  _fichaCSV = { filas, nombreArchivo: `proveedor_${sanitizar(p.empresa)}.csv` };
+  openModal('modalFicha');
+}
+
+// DESCARGA CSV
+function descargarFichaCSV() {
+  const csv = _fichaCSV.filas.map(fila =>
+    fila.map(celda => {
+      const s = String(celda == null ? '' : celda);
+      return /[",;\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(';')
+  ).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = _fichaCSV.nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV descargado', 'success');
+}
+
+function sanitizar(txt) {
+  return String(txt || 'ficha').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'ficha';
+}
+
+async function saveGasUrl() {
+  const val = document.getElementById('cfg_gasUrl').value.trim();
+  if (!val || !val.startsWith('https://')) { showToast('URL inválida', 'error'); return; }
+  localStorage.setItem('ospiv_gas_url', val);
+  _gasUrlActiva = val; // activa inmediatamente sin recargar
+  showStatus('info', '⏳ Guardando URL en el sistema…');
+  // Guardar en el Sheet para que quede fija en todas las computadoras
+  try {
+    await gasCall({ action: 'saveConfig', data: { gasUrl: val } });
+    showStatus('success', '✓ URL guardada y activa en todas las computadoras. Ya no hace falta volver a cargarla.');
+  } catch {
+    showStatus('success', '✓ URL activa en esta computadora. (No se pudo guardar en el Sheet — verificá que el GAS esté actualizado.)');
+  }
+  showToast('URL actualizada', 'success');
+}
+async function testGasUrl() {
+  const val = document.getElementById('cfg_gasUrl').value.trim();
+  if (!val) { showToast('Primero pegá la URL', 'error'); return; }
+  showStatus('info', '⏳ Probando conexión…');
+  try {
+    const url = val + '?payload=' + encodeURIComponent(JSON.stringify({ action: 'getConfig' }));
+    const res = await fetch(url).then(r => r.json());
+    if (res.password) {
+      showStatus('success', '✓ Conexión exitosa. El script responde correctamente.');
+    } else {
+      showStatus('error', '✕ El script respondió pero sin datos esperados. Verificá que sea el script correcto.');
+    }
+  } catch {
+    showStatus('error', '✕ No se pudo conectar. Verificá la URL y que el script esté desplegado como webapp pública.');
+  }
+}
+function showStatus(type, msg) {
+  const el = document.getElementById('cfg_status');
+  const colors = { success: { bg:'rgba(56,217,169,0.1)', border:'var(--accent2)', color:'var(--accent2)' }, error: { bg:'var(--danger-soft)', border:'var(--danger)', color:'var(--danger)' }, info: { bg:'var(--accent-soft)', border:'var(--accent)', color:'var(--accent)' } };
+  const c = colors[type] || colors.info;
+  el.style.display = 'block';
+  el.style.background = c.bg;
+  el.style.border = `1px solid ${c.border}`;
+  el.style.color = c.color;
+  el.textContent = msg;
+}
+
+// MODAL HELPERS
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+  });
+});
+
+// TOAST
+function showToast(msg, type='info') {
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span style="font-weight:700;font-size:15px">${icons[type]||'·'}</span> ${msg}`;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// UTILS
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function safeParse(str, fallback) {
+  try { return JSON.parse(str) || fallback; } catch { return fallback; }
+}
+</script>
+</body>
+</html>
